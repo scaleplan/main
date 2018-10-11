@@ -1,0 +1,12 @@
+{
+    "name": "scaleplan/skeleton",
+    "description": "Scaleplan framework project skeleton",
+    "autoload": {
+        "psr-4": {
+            "Scaleplan\\Skeleton\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=7.0"
+    }
+}
