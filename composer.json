@@ -1,9 +1,9 @@
 {
     "name": "scaleplan/main",
-    "description": "Scaleplan framework project skeleton",
+    "description": "Scaleplan framework main files",
     "autoload": {
         "psr-4": {
-            "Scaleplan\\Skeleton\\": "src/"
+            "Scaleplan\\Main\\": "src/"
         }
     },
     "require": {
