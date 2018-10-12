@@ -1,5 +1,5 @@
 {
-    "name": "scaleplan/skeleton",
+    "name": "scaleplan/main",
     "description": "Scaleplan framework project skeleton",
     "autoload": {
         "psr-4": {
