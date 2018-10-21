@@ -16,6 +16,8 @@ use Scaleplan\Templater\Templater;
  */
 class View
 {
+    public const ERROR_TEMPLATE_PATH = 'error/universal.html';
+
     /**
      * Путь к файлу шаблона
      *
@@ -74,7 +76,7 @@ class View
      *
      * @param bool $isMessage - новое значение
      */
-    public function setIsMessage(bool $isMessage): void
+    public function setIsMessage(bool $isMessage) : void
     {
         $this->isMessage = $isMessage;
     }
@@ -84,7 +86,7 @@ class View
      *
      * @return string
      */
-    public function getFilePath(): string
+    public function getFilePath() : string
     {
         return $this->filePath;
     }
@@ -96,7 +98,7 @@ class View
      *
      * @throws Exceptions\SettingNotFoundException
      */
-    public function getFullFilePath(): string
+    public function getFullFilePath() : string
     {
         return $_SERVER['DOCUMENT_ROOT'] .
             ($this->isMessage ? App::getSetting('MESSAGES_PATH') : App::getSetting('VIEWS_PATH'))
@@ -109,7 +111,7 @@ class View
      *
      * @return bool
      */
-    public function getAddHeader(): bool
+    public function getAddHeader() : bool
     {
         return $this->addHeader;
     }
@@ -120,7 +122,7 @@ class View
      * @param DbResult $data - данные
      * @param string $parentSelector - в элемент с каким селектором добавлять данные
      */
-    public function addData(DbResult $data, string $parentSelector): void
+    public function addData(DbResult $data, string $parentSelector = 'body') : void
     {
         $this->data[$parentSelector] = $data;
     }
@@ -130,7 +132,7 @@ class View
      *
      * @param string $parentSelector - в элемент с каким селектором больше не надо добавлять данные
      */
-    public function deleteData(string $parentSelector): void
+    public function deleteData(string $parentSelector) : void
     {
         unset($this->data[$parentSelector]);
     }
@@ -158,10 +160,12 @@ class View
                 break;
             }
 
-            if (
-                !empty($value = $el->attr('data-acless-value'))
-                &&
-                !\in_array($value, json_decode($aclessRight['values'] ?? '', true) ?? [], true)
+            if (!empty($value = $el->attr('data-acless-value'))
+                && !\in_array(
+                    $value,
+                    json_decode($aclessRight['values'] ?? '', true) ?? [],
+                    true
+                )
             ) {
                 $el->remove();
                 break;
@@ -204,5 +208,22 @@ class View
         }
 
         return $template;
+    }
+
+    /**
+     * @param \Throwable $e
+     *
+     * @return \phpQueryObject
+     * @throws \Scaleplan\Helpers\Exceptions\FileUploadException
+     * @throws \Scaleplan\Helpers\Exceptions\HelperException
+     * @throws \Scaleplan\Http\Exceptions\InvalidUrlException
+     * @throws \Scaleplan\Result\Exceptions\ResultException
+     */
+    public static function renderError(\Throwable $e)
+    {
+        $errorPage = new static(static::ERROR_TEMPLATE_PATH, true);
+        $errorPage->addData(new DbResult(['code' => $e->getCode(), 'message' => $e->getMessage()]));
+
+        return $errorPage->render();
     }
 }

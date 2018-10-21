@@ -14,7 +14,7 @@ interface UserInterface
      *
      * @return int
      */
-    public function getId(): int;
+    public function getId() : int;
 
     /**
      * Синглтон объекта текущего пользователя
@@ -28,5 +28,5 @@ interface UserInterface
      *
      * @return int
      */
-    public function getDefaultId(): int;
+    public function getDefaultId() : int;
 }
