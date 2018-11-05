@@ -8,5 +8,10 @@
     },
     "require": {
         "php": ">=7.0"
+    },
+    "scripts": {
+        "init": [
+            "init.sh"
+        ]
     }
 }
