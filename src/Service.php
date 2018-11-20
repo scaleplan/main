@@ -19,7 +19,7 @@ use Scaleplan\Main\Exceptions\ServiceMethodNotFoundException;
 abstract class Service extends AccessServiceParent
 {
     /**
-     * Идентификатор модели в системе Acless
+     * Идентификатор модели в системе Access
      */
     public const MODEL_TYPE_ID = 0;
 
@@ -128,12 +128,15 @@ abstract class Service extends AccessServiceParent
      * @param Service|null $object - объект модели
      *
      * @return AccessServiceResult
+     *
      * @throws Exceptions\CacheException
      * @throws Exceptions\DatabaseException
      * @throws Exceptions\SettingNotFoundException
      * @throws \ReflectionException
      * @throws \Scaleplan\CachePDO\Exceptions\ConnectionStringException
      * @throws \Scaleplan\CachePDO\Exceptions\PDOConnectionException
+     * @throws \Scaleplan\Data\Exceptions\DataException
+     * @throws \Scaleplan\Result\Exceptions\ResultException
      */
     private static function invoke(AccessServiceResult $aResult, Service $object = null) : AccessServiceResult
     {
@@ -160,8 +163,9 @@ abstract class Service extends AccessServiceParent
         $dataStory = Data::create($sql, $data);
         $dataStory->setCacheConnect(App::getCache());
         $dataStory->setDbConnect(App::getDB($dbName));
+        $dataStory->setPrefix($prefix);
 
-        $aResult->setRawResult($dataStory->getValue($prefix));
+        $aResult->setRawResult($dataStory->getValue());
 
         return $aResult;
     }
@@ -178,19 +182,24 @@ abstract class Service extends AccessServiceParent
      * @throws Exceptions\DatabaseException
      * @throws Exceptions\SettingNotFoundException
      * @throws \ReflectionException
+     * @throws \Scaleplan\Access\Exceptions\AccessDeniedException
      * @throws \Scaleplan\Access\Exceptions\AccessException
+     * @throws \Scaleplan\Access\Exceptions\ValidationException
      * @throws \Scaleplan\CachePDO\Exceptions\ConnectionStringException
      * @throws \Scaleplan\CachePDO\Exceptions\PDOConnectionException
+     * @throws \Scaleplan\DTO\Exceptions\ValidationException
+     * @throws \Scaleplan\Data\Exceptions\DataException
+     * @throws \Scaleplan\Result\Exceptions\ResultException
      */
     public static function __callStatic(string $name, array $data) : AccessServiceResult
     {
         if ($name === 'getFullInfo') {
-            self::fullInfoMissRepair($name, self::class);
+            static::fullInfoMissRepair($name, static::class);
         }
 
         $aResult = parent::__callStatic($name, $data);
 
-        return self::invoke($aResult);
+        return static::invoke($aResult);
     }
 
     /**
@@ -206,18 +215,23 @@ abstract class Service extends AccessServiceParent
      * @throws Exceptions\DatabaseException
      * @throws Exceptions\SettingNotFoundException
      * @throws \ReflectionException
+     * @throws \Scaleplan\Access\Exceptions\AccessDeniedException
      * @throws \Scaleplan\Access\Exceptions\AccessException
+     * @throws \Scaleplan\Access\Exceptions\ValidationException
      * @throws \Scaleplan\CachePDO\Exceptions\ConnectionStringException
      * @throws \Scaleplan\CachePDO\Exceptions\PDOConnectionException
+     * @throws \Scaleplan\DTO\Exceptions\ValidationException
+     * @throws \Scaleplan\Data\Exceptions\DataException
+     * @throws \Scaleplan\Result\Exceptions\ResultException
      */
     public function __call(string $name, array $data) : AccessServiceResult
     {
         if ($name === 'getFullInfo') {
-            self::fullInfoMissRepair($name, $this);
+            static::fullInfoMissRepair($name, $this);
         }
 
         $aResult = parent::__call($name, $data);
 
-        return self::invoke($aResult, $this);
+        return static::invoke($aResult, $this);
     }
 }

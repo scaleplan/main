@@ -3,7 +3,7 @@
 namespace Scaleplan\Main;
 
 use Scaleplan\Access\AccessControllerParent;
-use Scaleplan\Http\Request;
+use Scaleplan\Http\CurrentRequest;
 use Scaleplan\Result\AbstractResult;
 use Scaleplan\Result\DbResult;
 use Scaleplan\Result\HTMLResult;
@@ -97,11 +97,11 @@ abstract class Controller extends AccessControllerParent
      */
     protected static function formatResponse(DbResult $result, string $parentSelector = 'body'): AbstractResult
     {
-        if (Request::getCurrentRequest()->isAjax()) {
+        if (CurrentRequest::getCurrentRequest()->isAjax()) {
             return $result;
         }
 
-        $page = new View(Request::getCurrentRequest()->getURL() . '.html');
+        $page = new View(CurrentRequest::getCurrentRequest()->getURL() . '.html');
         $page->addData($result, $parentSelector);
 
         return new HTMLResult($page->render());

@@ -3,7 +3,7 @@
 namespace Scaleplan\Main;
 
 use Scaleplan\Access\Access;
-use Scaleplan\Http\Request;
+use Scaleplan\Http\CurrentRequest;
 use Scaleplan\Result\DbResult;
 use Scaleplan\Templater\Templater;
 
@@ -67,7 +67,7 @@ class View
     public function __construct(string $filePath, bool $addHeader = null, array $settings = [])
     {
         $this->filePath = $filePath;
-        $this->addHeader = $addHeader ?? !Request::getCurrentRequest()->isAjax();
+        $this->addHeader = $addHeader ?? !CurrentRequest::getCurrentRequest()->isAjax();
         $this->settings = $settings;
     }
 
@@ -149,21 +149,21 @@ class View
      */
     protected static function removeUnresolvedElements(&$template)
     {
-        $elements = $template->find('*[data-acless-url-id]');
+        $elements = $template->find('*[data-access-url-id]');
         /** @var Access $access */
         $access = Access::create(App::getCurrentUser()->getId());
         $accessUrls = $access->getAccessRights();
 
         foreach ($elements as $el) {
-            if (empty($aclessRight = $accessUrls[$el->attr('data-acless-url-id')])) {
+            if (empty($accessRight = $accessUrls[$el->attr('data-access-url-id')])) {
                 $el->remove();
                 break;
             }
 
-            if (!empty($value = $el->attr('data-acless-value'))
+            if (!empty($value = $el->attr('data-access-value'))
                 && !\in_array(
                     $value,
-                    json_decode($aclessRight['values'] ?? '', true) ?? [],
+                    json_decode($accessRight['values'] ?? '', true) ?? [],
                     true
                 )
             ) {

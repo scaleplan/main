@@ -11,6 +11,7 @@ use Scaleplan\Main\Exceptions\InvalidHostException;
 use Scaleplan\Main\Exceptions\SettingNotFoundException;
 use Scaleplan\Main\Interfaces\UserInterface;
 use Symfony\Component\Yaml\Yaml;
+use function Scaleplan\Helpers\getenv;
 
 /**
  * Class App
@@ -160,7 +161,7 @@ class App
             throw new InvalidHostException('Передан неверный заголовок HTTP-HOST');
         }
 
-        static::$user = UserInterface::getCurrentUser();
+        static::$user = $user::getCurrentUser();
 
         Data::setSettings(
             [

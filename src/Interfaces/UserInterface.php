@@ -28,5 +28,5 @@ interface UserInterface
      *
      * @return int
      */
-    public function getDefaultId() : int;
+    public static function getDefaultId() : int;
 }
