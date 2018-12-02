@@ -133,8 +133,8 @@ abstract class Service extends AccessServiceParent
      * @throws Exceptions\DatabaseException
      * @throws Exceptions\SettingNotFoundException
      * @throws \ReflectionException
-     * @throws \Scaleplan\CachePDO\Exceptions\ConnectionStringException
-     * @throws \Scaleplan\CachePDO\Exceptions\PDOConnectionException
+     * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
+     * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      * @throws \Scaleplan\Data\Exceptions\DataException
      * @throws \Scaleplan\Result\Exceptions\ResultException
      */
@@ -185,8 +185,8 @@ abstract class Service extends AccessServiceParent
      * @throws \Scaleplan\Access\Exceptions\AccessDeniedException
      * @throws \Scaleplan\Access\Exceptions\AccessException
      * @throws \Scaleplan\Access\Exceptions\ValidationException
-     * @throws \Scaleplan\CachePDO\Exceptions\ConnectionStringException
-     * @throws \Scaleplan\CachePDO\Exceptions\PDOConnectionException
+     * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
+     * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      * @throws \Scaleplan\DTO\Exceptions\ValidationException
      * @throws \Scaleplan\Data\Exceptions\DataException
      * @throws \Scaleplan\Result\Exceptions\ResultException
@@ -218,8 +218,8 @@ abstract class Service extends AccessServiceParent
      * @throws \Scaleplan\Access\Exceptions\AccessDeniedException
      * @throws \Scaleplan\Access\Exceptions\AccessException
      * @throws \Scaleplan\Access\Exceptions\ValidationException
-     * @throws \Scaleplan\CachePDO\Exceptions\ConnectionStringException
-     * @throws \Scaleplan\CachePDO\Exceptions\PDOConnectionException
+     * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
+     * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      * @throws \Scaleplan\DTO\Exceptions\ValidationException
      * @throws \Scaleplan\Data\Exceptions\DataException
      * @throws \Scaleplan\Result\Exceptions\ResultException

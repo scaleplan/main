@@ -2,7 +2,7 @@
 
 namespace Scaleplan\Main;
 
-use Scaleplan\CachePDO\CachePDO;
+use Scaleplan\Db\Db;
 use Scaleplan\Data\Data;
 use Scaleplan\Helpers\Helper;
 use Scaleplan\Main\Exceptions\CacheException;
@@ -28,7 +28,7 @@ class App
      */
     public static function getSetting(string $settingName)
     {
-        if (getenv($settingName) === false) {
+        if (getenv($settingName) === null) {
             throw new SettingNotFoundException("Setting $settingName not found");
         }
 
@@ -151,8 +151,8 @@ class App
      * @throws DatabaseException
      * @throws InvalidHostException
      * @throws SettingNotFoundException
-     * @throws \Scaleplan\CachePDO\Exceptions\ConnectionStringException
-     * @throws \Scaleplan\CachePDO\Exceptions\PDOConnectionException
+     * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
+     * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      */
     public static function init(UserInterface $user):void
     {
@@ -174,7 +174,7 @@ class App
     /**
      * Возвращает все автивные на данный момент подключения в базам данных
      *
-     * @return CachePDO[]
+     * @return Db[]
      */
     public static function getDatabases(): array
     {
@@ -186,14 +186,14 @@ class App
      *
      * @param $name - имя базы данных
      *
-     * @return CachePDO
+     * @return Db
      *
      * @throws DatabaseException
      * @throws SettingNotFoundException
-     * @throws \Scaleplan\CachePDO\Exceptions\ConnectionStringException
-     * @throws \Scaleplan\CachePDO\Exceptions\PDOConnectionException
+     * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
+     * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      */
-    public static function getDB($name): CachePDO
+    public static function getDB($name): Db
     {
         if (\in_array($name, static::$denyDatabases, true)) {
             throw new DatabaseException("Подключение к базе данных $name не разрешено");
@@ -234,7 +234,7 @@ class App
             throw new DatabaseException('В данных о подключении к БД не хватает пароля пользователя БД');
         }
 
-        $dbConnect = new CachePDO(
+        $dbConnect = new Db(
             $db['DNS'],
             $db['USER'],
             $db['PASSWORD'],
