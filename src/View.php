@@ -4,6 +4,7 @@ namespace Scaleplan\Main;
 
 use Scaleplan\Access\Access;
 use Scaleplan\Http\CurrentRequest;
+use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Result\DbResult;
 use Scaleplan\Templater\Templater;
 
@@ -101,7 +102,10 @@ class View
     public function getFullFilePath() : string
     {
         return $_SERVER['DOCUMENT_ROOT'] .
-            ($this->isMessage ? App::getSetting('MESSAGES_PATH') : App::getSetting('VIEWS_PATH'))
+            ($this->isMessage
+                ? App::getSetting(ConfigConstants::MESSAGES_PATH)
+                : App::getSetting(ConfigConstants::VIEWS_PATH)
+            )
             . '/'
             . $this->filePath;
     }

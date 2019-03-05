@@ -3,7 +3,7 @@
 namespace Scaleplan\Main\Exceptions;
 
 /**
- * Class SettingNotFoundException
+ * Class CacheException
  *
  * @package Scaleplan\Main\Exceptions
  */

@@ -4,6 +4,7 @@ namespace Scaleplan\Main;
 
 use Scaleplan\Access\AccessControllerParent;
 use Scaleplan\Http\CurrentRequest;
+use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Result\AbstractResult;
 use Scaleplan\Result\DbResult;
 use Scaleplan\Result\HTMLResult;
@@ -51,11 +52,11 @@ abstract class Controller extends AccessControllerParent
         $this->modelName = strtr(
             static::class,
             [
-                App::getSetting('CONTROLLERS_NAMESPACE') => '',
-                App::getSetting('CONTROLLERS_POSTFIX') => ''
+                App::getSetting(ConfigConstants::CONTROLLERS_NAMESPACE) => '',
+                App::getSetting(ConfigConstants::CONTROLLERS_POSTFIX) => ''
             ]
         );
-        $this->fullServiceName = App::getSetting('SERVICES_NAMESPACE') . $this->modelName;
+        $this->fullServiceName = App::getSetting(ConfigConstants::SERVICES_NAMESPACE) . $this->modelName;
     }
 
     /**
@@ -97,11 +98,11 @@ abstract class Controller extends AccessControllerParent
      */
     protected static function formatResponse(DbResult $result, string $parentSelector = 'body'): AbstractResult
     {
-        if (CurrentRequest::getCurrentRequest()->isAjax()) {
+        if (CurrentRequest::getRequest()->isAjax()) {
             return $result;
         }
 
-        $page = new View(CurrentRequest::getCurrentRequest()->getURL() . '.html');
+        $page = new View(CurrentRequest::getRequest()->getURL() . '.html');
         $page->addData($result, $parentSelector);
 
         return new HTMLResult($page->render());

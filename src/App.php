@@ -5,6 +5,7 @@ namespace Scaleplan\Main;
 use Scaleplan\Db\Db;
 use Scaleplan\Data\Data;
 use Scaleplan\Helpers\Helper;
+use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Exceptions\CacheException;
 use Scaleplan\Main\Exceptions\DatabaseException;
 use Scaleplan\Main\Exceptions\InvalidHostException;
@@ -59,7 +60,7 @@ class App
     /* Данные для подключения к базам данных */
     private static $main = [
         'DNS' => 'pgsql:host=/var/run/postgresql;port=5432;dbname=main',
-        'USER' => 'avtomonov',
+        'USER' => 'user',
         'PASSWORD' => 'password',
         'SCHEMAS' => ['public', 'users']
     ];
@@ -85,8 +86,7 @@ class App
         string $connectType = null,
         string $hostOrSocket = null,
         int $port = null
-    )
-    {
+    ) {
         $cacheType = $cacheType ?? getenv('CACHE_TYPE');
         $connectType = $connectType ?? getenv('CACHE_CONNECT_TYPE');
         $hostOrSocket = $hostOrSocket ?? getenv('CACHE_HOST_OR_SOCKET');
@@ -101,7 +101,9 @@ class App
         }
 
         if ($cacheType === 'memcached' && !$port) {
-            throw new CacheException('Для Memcached недоступно подключение к Unix-сокету. Необходимо задать порт подключения');
+            throw new CacheException(
+                'Для Memcached недоступно подключение к Unix-сокету. Необходимо задать порт подключения'
+            );
         }
 
         if (empty($connectType) || !\in_array($connectType, ['connect', 'pconnect'], true)) {
@@ -113,7 +115,7 @@ class App
         }
 
         if ($cacheType === 'memcached') {
-            $memcached = new \Memcached;
+            $memcached = new \Memcached();
             if (!$memcached->addServer($hostOrSocket, $port)) {
                 throw new CacheException('Не удалось подключиться к Memcached');
             }
@@ -121,7 +123,7 @@ class App
             return static::$caches[$hostOrSocket] = $memcached;
         }
 
-        $redis = new \Redis;
+        $redis = new \Redis();
         if (!$redis->$connectType($hostOrSocket, $port)) {
             throw new CacheException('Не удалось подключиться к Redis');
         }
@@ -153,6 +155,7 @@ class App
      * @throws SettingNotFoundException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
+     * @throws \Scaleplan\Db\Exceptions\QueryCountNotMatchParamsException
      */
     public static function init(UserInterface $user):void
     {
@@ -161,11 +164,11 @@ class App
             throw new InvalidHostException('Передан неверный заголовок HTTP-HOST');
         }
 
-        static::$user = $user::getCurrentUser();
+        static::$user = $user;
 
         Data::setSettings(
             [
-                'dbConnect' => static::getDB(static::getSetting('DEFAULT_DB')),
+                'dbConnect' => static::getDB(),
                 'cacheConnect' => static::getCache()
             ]
         );
@@ -184,7 +187,7 @@ class App
     /**
      * Подкючиться к базе данных (если подключения еще нет) и вернуть объект подключения
      *
-     * @param $name - имя базы данных
+     * @param string $name - имя базы данных
      *
      * @return Db
      *
@@ -192,9 +195,14 @@ class App
      * @throws SettingNotFoundException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
+     * @throws \Scaleplan\Db\Exceptions\QueryCountNotMatchParamsException
      */
-    public static function getDB($name): Db
+    public static function getDB(string $name = null): Db
     {
+        if (!$name) {
+            $name = static::getSetting(ConfigConstants::DEFAULT_DB);
+        }
+
         if (\in_array($name, static::$denyDatabases, true)) {
             throw new DatabaseException("Подключение к базе данных $name не разрешено");
         }
@@ -211,7 +219,7 @@ class App
                     = Yaml::parse(
                         file_get_contents(
                             $_SERVER['DOCUMENT_ROOT']
-                            . static::getSetting('DB_CONFIGS_PATH')
+                            . static::getSetting(ConfigConstants::DB_CONFIGS_PATH)
                             . "/$name.yml"
                         )
                 );
@@ -238,9 +246,9 @@ class App
             $db['DNS'],
             $db['USER'],
             $db['PASSWORD'],
-            !empty($db['SCHEMAS']) ? $db['SCHEMAS'] : [],
             !empty($db['OPTIONS']) ? $db['OPTIONS'] : []
         );
+        $dbConnect->initTablesList(!empty($db['SCHEMAS']) ? $db['SCHEMAS'] : []);
 
         return static::$databases[$name] = $dbConnect;
     }
