@@ -3,11 +3,10 @@
 namespace Scaleplan\Main;
 
 use Scaleplan\Access\AccessControllerParent;
+use function Scaleplan\Helpers\get_required_env;
 use Scaleplan\Http\CurrentRequest;
 use Scaleplan\Main\Constants\ConfigConstants;
-use Scaleplan\Result\AbstractResult;
 use Scaleplan\Result\DbResult;
-use Scaleplan\Result\HTMLResult;
 
 /**
  * Class Controller
@@ -29,54 +28,44 @@ abstract class Controller extends AccessControllerParent
     public const ONLY_AUTH_CONTROLLERS = [];
 
     /**
-     * Имя модели
+     * Имя таблицы
      *
      * @var string
      */
-    protected $modelName = '';
+    protected $repositoryName = '';
 
     /**
-     * Полное имя модели
-     *
-     * @var string
+     * @var CurrentRequest
      */
-    protected $fullServiceName = '';
+    protected $request;
 
     /**
      * Controller constructor.
      *
-     * @throws Exceptions\SettingNotFoundException
+     * @param CurrentRequest $request
+     *
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
-    public function __construct()
+    public function __construct(CurrentRequest $request)
     {
-        $this->modelName = strtr(
-            static::class,
-            [
-                App::getSetting(ConfigConstants::CONTROLLERS_NAMESPACE) => '',
-                App::getSetting(ConfigConstants::CONTROLLERS_POSTFIX) => ''
-            ]
+        $this->request = $request;
+
+        $model = str_replace(
+            get_required_env(ConfigConstants::CONTROLLERS_POSTFIX),
+            '',
+            substr(strrchr(__CLASS__, "\\"), 1)
         );
-        $this->fullServiceName = App::getSetting(ConfigConstants::SERVICES_NAMESPACE) . $this->modelName;
+        $this->repositoryName = lcfirst($model) . 'Repository';
     }
 
     /**
-     * Вернуть имя связанной с контроллером модели по умолчанию
+     * Вернуть имя связанного с контроллером репозитория по умолчанию
      *
      * @return string
      */
-    public function getServiceName(): string
+    public function getRepositoryName() : string
     {
-        return $this->modelName;
-    }
-
-    /**
-     * Вернуть полное имя связанной с контроллером модели по умолчанию
-     *
-     * @return string
-     */
-    public function getFullServiceName(): string
-    {
-        return $this->fullServiceName;
+        return $this->repositoryName;
     }
 
     /**
@@ -85,26 +74,28 @@ abstract class Controller extends AccessControllerParent
      * @param DbResult $result - результат запроса к БД
      * @param string $parentSelector - куда на странице вставлять результат запроса
      *
-     * @return AbstractResult
+     * @return string
      *
-     * @throws Exceptions\SettingNotFoundException
+     * @throws \ReflectionException
      * @throws \Scaleplan\Access\Exceptions\ConfigException
-     * @throws \Scaleplan\Helpers\Exceptions\FileUploadException
-     * @throws \Scaleplan\Helpers\Exceptions\HelperException
-     * @throws \Scaleplan\Http\Exceptions\InvalidUrlException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Redis\Exceptions\RedisSingletonException
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
      * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
      */
-    protected static function formatResponse(DbResult $result, string $parentSelector = 'body'): AbstractResult
+    protected function formatResponse(DbResult $result, \string $parentSelector = 'body') : string
     {
-        if (CurrentRequest::getRequest()->isAjax()) {
-            return $result;
+        if ($this->request->isAjax()) {
+            return $result->getJsonResult();
         }
 
-        $page = new View(CurrentRequest::getRequest()->getURL() . '.html');
+        $page = new View($this->request->getURL() . '.html');
         $page->addData($result, $parentSelector);
 
-        return new HTMLResult($page->render());
+        return $page->render();
     }
 }

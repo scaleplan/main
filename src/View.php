@@ -3,7 +3,9 @@
 namespace Scaleplan\Main;
 
 use Scaleplan\Access\Access;
-use Scaleplan\Http\CurrentRequest;
+use function Scaleplan\DependencyInjection\get_container;
+use function Scaleplan\Helpers\get_required_env;
+use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Result\DbResult;
 use Scaleplan\Templater\Templater;
@@ -55,20 +57,23 @@ class View
     protected $isMessage = false;
 
     /**
-     * Конструктор
+     * View constructor.
      *
      * @param string $filePath - путь к файлу шаблона
      * @param bool $addHeader - добавлять ли шапку
      * @param array $settings - настройки шаблонизатора
      *
-     * @throws \Scaleplan\Helpers\Exceptions\FileUploadException
-     * @throws \Scaleplan\Helpers\Exceptions\HelperException
-     * @throws \Scaleplan\Http\Exceptions\InvalidUrlException
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
     public function __construct(string $filePath, bool $addHeader = null, array $settings = [])
     {
         $this->filePath = $filePath;
-        $this->addHeader = $addHeader ?? !CurrentRequest::getCurrentRequest()->isAjax();
+        $currentRequest = get_container(CurrentRequestInterface::class);
+        $this->addHeader = $addHeader ?? ($currentRequest && !$currentRequest->isAjax());
         $this->settings = $settings;
     }
 
@@ -97,14 +102,14 @@ class View
      *
      * @return string
      *
-     * @throws Exceptions\SettingNotFoundException
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
     public function getFullFilePath() : string
     {
         return $_SERVER['DOCUMENT_ROOT'] .
             ($this->isMessage
-                ? App::getSetting(ConfigConstants::MESSAGES_PATH)
-                : App::getSetting(ConfigConstants::VIEWS_PATH)
+                ? get_required_env(ConfigConstants::MESSAGES_PATH)
+                : get_required_env(ConfigConstants::VIEWS_PATH)
             )
             . '/'
             . $this->filePath;
@@ -192,8 +197,8 @@ class View
      *
      * @return \phpQueryObject
      *
-     * @throws Exceptions\SettingNotFoundException
      * @throws \Scaleplan\Access\Exceptions\ConfigException
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Redis\Exceptions\RedisSingletonException
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
      * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
@@ -218,12 +223,15 @@ class View
      * @param \Throwable $e
      *
      * @return \phpQueryObject
-     * @throws \Scaleplan\Helpers\Exceptions\FileUploadException
-     * @throws \Scaleplan\Helpers\Exceptions\HelperException
-     * @throws \Scaleplan\Http\Exceptions\InvalidUrlException
+     *
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Result\Exceptions\ResultException
      */
-    public static function renderError(\Throwable $e)
+    public static function renderError(\Throwable $e) : \phpQueryObject
     {
         $errorPage = new static(static::ERROR_TEMPLATE_PATH, true);
         $errorPage->addData(new DbResult(['code' => $e->getCode(), 'message' => $e->getMessage()]));

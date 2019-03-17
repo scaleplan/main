@@ -9,7 +9,7 @@ namespace Scaleplan\Main\Exceptions;
  */
 abstract class AbstractException extends \Exception
 {
-    public const MESSAGE = '';
+    public const MESSAGE = 'Application error.';
 
     /**
      * AbstractException constructor.
@@ -18,7 +18,7 @@ abstract class AbstractException extends \Exception
      * @param int $code
      * @param \Throwable|null $previous
      */
-    public function __construct(string $message = '', int $code = 0, \Throwable $previous = null)
+    public function __construct(\string $message = '', int $code = 0, \Throwable $previous = null)
     {
         parent::__construct($message ?: static::MESSAGE, $code, $previous);
     }

@@ -4,6 +4,7 @@ namespace Scaleplan\Main;
 
 use phpDocumentor\Reflection\DocBlock;
 use Scaleplan\Data\Data;
+use function Scaleplan\Helpers\get_required_env;
 use Scaleplan\Helpers\Helper;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Exceptions\RepositoryException;
@@ -27,23 +28,19 @@ abstract class AbstractRepository
     /**
      * Вернуть имя базы данных в зависимости от субдомена
      *
-     * @param null|DocBlock $docBlock - блок описания метода получения имени базы данных
+     * @param DocBlock $docBlock - блок описания метода получения имени базы данных
      *
      * @return string
      *
-     * @throws Exceptions\SettingNotFoundException
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
-    public static function getDbName(?DocBlock $docBlock) : string
+    public static function getDbName(DocBlock $docBlock) : string
     {
-        if (!$docBlock) {
-            return App::getSetting(ConfigConstants::DEFAULT_DB);
+        $docParam = $docBlock->getTagsByName('dbName')[0] ?? null;
+        if (!$docParam) {
+            return get_required_env(ConfigConstants::DEFAULT_DB);
         }
 
-        if (empty($docParam = $docBlock->getTagsByName('dbName'))) {
-            return App::getSetting(ConfigConstants::DEFAULT_DB);
-        }
-
-        $docParam = end($docParam);
         $dbName = trim($docParam->getDescription());
 
         switch ($dbName) {
@@ -62,42 +59,38 @@ abstract class AbstractRepository
      *
      * @return string
      */
-    public static function getPrefix(?DocBlock $docBlock) : string
+    public static function getPrefix(DocBlock $docBlock) : string
     {
-        if (!$docBlock) {
+        $docParam = $docBlock->getTagsByName('prefix')[0] ?? null;
+        if (!$docParam) {
             return '';
         }
-
-        if (empty($docParam = $docBlock->getTagsByName('prefix'))) {
-            return '';
-        }
-
-        $docParam = end($docParam);
 
         return trim($docParam->getDescription());
     }
 
     /**
-     * Выполнить метод или SQL-запрос хранящийся в свойстве
-     *
      * @param string $propertyName
      * @param array $data
-     * @param \object|null $object
+     * @param object|null $object
      *
      * @return DbResult
      *
      * @throws Exceptions\CacheException
      * @throws Exceptions\DatabaseException
-     * @throws Exceptions\SettingNotFoundException
      * @throws RepositoryException
      * @throws ServiceMethodNotFoundException
      * @throws \ReflectionException
+     * @throws \Scaleplan\Data\Exceptions\CacheDriverNotSupportedException
      * @throws \Scaleplan\Data\Exceptions\DataException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      * @throws \Scaleplan\Db\Exceptions\QueryCountNotMatchParamsException
+     * @throws \Scaleplan\Db\Exceptions\QueryExecutionException
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Scaleplan\Result\Exceptions\ResultException
      */
-    private static function invoke(string $propertyName, array $data, \object $object = null) : DbResult
+    public static function invoke(string $propertyName, array $data, \object $object = null) : DbResult
     {
         if (!property_exists(static::class, $propertyName)) {
             throw new ServiceMethodNotFoundException();
@@ -112,34 +105,34 @@ abstract class AbstractRepository
         $docBlock = new DocBlock($reflectionProperty->getDocComment());
 
         $dbName = static::getDbName($docBlock);
-        $prefix = static::getPrefix($docBlock);
 
-        $dataStory = Data::create($sql, $data);
+        $dataStory = Data::getInstance($sql, $data);
         $dataStory->setCacheConnect(App::getCache());
         $dataStory->setDbConnect(App::getDB($dbName));
-        $dataStory->setPrefix($prefix);
+        $dataStory->setPrefix(static::getPrefix($docBlock));
 
         return $dataStory->getValue();
     }
 
     /**
-     * Magic-метод для выполнения приватных статических методов и SQL-запросов хранящихся в статических свойствах
-     * классов
-     *
-     * @param string $propertyName - имя свойства
-     * @param array $data - данных для исполнения запроса
+     * @param string $propertyName
+     * @param array $data
      *
      * @return DbResult
      *
      * @throws Exceptions\CacheException
      * @throws Exceptions\DatabaseException
-     * @throws Exceptions\SettingNotFoundException
+     * @throws RepositoryException
      * @throws ServiceMethodNotFoundException
      * @throws \ReflectionException
+     * @throws \Scaleplan\Data\Exceptions\CacheDriverNotSupportedException
      * @throws \Scaleplan\Data\Exceptions\DataException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      * @throws \Scaleplan\Db\Exceptions\QueryCountNotMatchParamsException
+     * @throws \Scaleplan\Db\Exceptions\QueryExecutionException
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Scaleplan\Result\Exceptions\ResultException
      */
     public static function __callStatic(string $propertyName, array $data) : DbResult
     {
@@ -147,23 +140,24 @@ abstract class AbstractRepository
     }
 
     /**
-     * Magic-метод для выполнения приватных нестатических методов и SQL-запросов хранящихся в нестатических свойствах
-     * классов
-     *
-     * @param string $propertyName - имя свойства
-     * @param array $data - данных для исполнения запроса
+     * @param string $propertyName
+     * @param array $data
      *
      * @return DbResult
      *
      * @throws Exceptions\CacheException
      * @throws Exceptions\DatabaseException
-     * @throws Exceptions\SettingNotFoundException
+     * @throws RepositoryException
      * @throws ServiceMethodNotFoundException
      * @throws \ReflectionException
+     * @throws \Scaleplan\Data\Exceptions\CacheDriverNotSupportedException
      * @throws \Scaleplan\Data\Exceptions\DataException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      * @throws \Scaleplan\Db\Exceptions\QueryCountNotMatchParamsException
+     * @throws \Scaleplan\Db\Exceptions\QueryExecutionException
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Scaleplan\Result\Exceptions\ResultException
      */
     public function __call(string $propertyName, array $data) : DbResult
     {
