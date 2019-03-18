@@ -10,8 +10,8 @@ use function Scaleplan\Helpers\get_required_env;
 use Scaleplan\Access\Access;
 use Scaleplan\Access\AccessModify;
 use function Scaleplan\DependencyInjection\get_container;
-use Scaleplan\AccessToFiles\AccessToFiles;
 use Scaleplan\Main\Interfaces\ControllerExecutorInterface;
+use Scaleplan\AccessToFiles\AccessToFilesInterface;
 
 try {
     $dotEnv = new Dotenv\Dotenv($_SERVER['DOCUMENT_ROOT']);
@@ -34,7 +34,8 @@ try {
     session_write_close();
     fastcgi_finish_request();
 
-    $af = AccessToFiles::getInstance();
+    /** @var AccessToFilesInterface $af */
+    $af = get_container(AccessToFilesInterface::class);
     $af->allowFiles();
 
     Helper::allDBCommit(App::getDatabases());

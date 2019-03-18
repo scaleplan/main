@@ -29,11 +29,16 @@ class View
     protected $filePath = '';
 
     /**
-     * Добавлять ли шапку
+     * Шапка
      *
-     * @var bool
+     * @var string
      */
-    protected $addHeader = true;
+    protected $header;
+
+    /**
+     * @var string
+     */
+    protected $footer;
 
     /**
      * Настройки шаблона
@@ -60,7 +65,8 @@ class View
      * View constructor.
      *
      * @param string $filePath - путь к файлу шаблона
-     * @param bool $addHeader - добавлять ли шапку
+     * @param string $header - шапка
+     * @param string $footer - подвал
      * @param array $settings - настройки шаблонизатора
      *
      * @throws \ReflectionException
@@ -69,11 +75,17 @@ class View
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
-    public function __construct(string $filePath, bool $addHeader = null, array $settings = [])
+    public function __construct(string $filePath, \string $header = '', \string $footer = '', array $settings = [])
     {
         $this->filePath = $filePath;
+        /** @var CurrentRequestInterface $currentRequest */
         $currentRequest = get_container(CurrentRequestInterface::class);
-        $this->addHeader = $addHeader ?? ($currentRequest && !$currentRequest->isAjax());
+        $this->header = $header ?? ($currentRequest && !$currentRequest->isAjax() ? static::getHeader() : '');
+        $this->footer = $footer ?? ($currentRequest && !$currentRequest->isAjax() ? static::getHeader() : '');
+        /** @var Access $access */
+        $access = Access::create(App::getCurrentUser()->getId());
+        $this->settings['forbiddenSelectors']
+            = $this->settings['forbiddenSelectors'] ?? $access->getForbiddenSelectors($currentRequest->getURL());
         $this->settings = $settings;
     }
 
@@ -116,16 +128,6 @@ class View
     }
 
     /**
-     * Вернуть флаг добавления шабки
-     *
-     * @return bool
-     */
-    public function getAddHeader() : bool
-    {
-        return $this->addHeader;
-    }
-
-    /**
      * Добавить данные для добавления на страницу
      *
      * @param DbResult $data - данные
@@ -147,47 +149,17 @@ class View
     }
 
     /**
-     * Удалить со страницы данные недоступные текущему пользователю
-     *
-     * @param \phpQueryObject $template - страница
-     *
-     * @return mixed
-     *
-     * @throws \Scaleplan\Access\Exceptions\ConfigException
-     * @throws \Scaleplan\Redis\Exceptions\RedisSingletonException
+     * @return string
      */
-    protected static function removeUnresolvedElements(&$template)
+    public static function getHeader() : \string
     {
-        $elements = $template->find('*[data-access-url-id]');
-        /** @var Access $access */
-        $access = Access::create(App::getCurrentUser()->getId());
-        $accessUrls = $access->getAccessRights();
-
-        foreach ($elements as $el) {
-            if (empty($accessRight = $accessUrls[$el->attr('data-access-url-id')])) {
-                $el->remove();
-                break;
-            }
-
-            if (!empty($value = $el->attr('data-access-value'))
-                && !\in_array(
-                    $value,
-                    json_decode($accessRight['values'] ?? '', true) ?? [],
-                    true
-                )
-            ) {
-                $el->remove();
-                break;
-            }
-        }
-
-        return $template;
+        return '';
     }
 
     /**
-     * @return string|\phpQueryObject
+     * @return string
      */
-    public static function getHeader()
+    public static function getFooter() : \string
     {
         return '';
     }
@@ -197,20 +169,18 @@ class View
      *
      * @return \phpQueryObject
      *
-     * @throws \Scaleplan\Access\Exceptions\ConfigException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
-     * @throws \Scaleplan\Redis\Exceptions\RedisSingletonException
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
      * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
      */
     public function render() : \phpQueryObject
     {
         $page = new Templater($this->getFullFilePath(), $this->settings);
+        $page->removeForbidden();
+        $page->renderIncludes();
         $template = $page->getTemplate();
-        static::removeUnresolvedElements($template);
-        if ($this->addHeader) {
-            $template->find('body')->prepend(static::getHeader());
-        }
+        $template->find('body')->prepend($this->header);
+        $template->find('body')->append($this->footer);
 
         foreach ($this->data as $selector => $data) {
             $page->setMultiData($data->getArrayResult(), $selector);
@@ -224,18 +194,16 @@ class View
      *
      * @return \phpQueryObject
      *
-     * @throws \ReflectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Result\Exceptions\ResultException
+     * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
+     * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
      */
-    public static function renderError(\Throwable $e) : \phpQueryObject
+    public function renderError(\Throwable $e) : \phpQueryObject
     {
-        $errorPage = new static(static::ERROR_TEMPLATE_PATH, true);
-        $errorPage->addData(new DbResult(['code' => $e->getCode(), 'message' => $e->getMessage()]));
+        $this->filePath = get_required_env('ERROR_TEMPLATE_PATH');
+        $this->data = [new DbResult(['code' => $e->getCode(), 'message' => $e->getMessage()])];
 
-        return $errorPage->render();
+        return $this->render();
     }
 }
