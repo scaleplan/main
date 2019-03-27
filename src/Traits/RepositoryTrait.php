@@ -2,47 +2,57 @@
 
 namespace Scaleplan\Main\Traits;
 
+use Scaleplan\Result\Interfaces\DbResultInterface;
+
 /**
  * Trait RepositoryTrait
  *
  * @package Scaleplan\Main\Traits
+ *
+ * @method DbResultInterface getInfo(array $data)
+ * @method DbResultInterface getList(array $data)
+ * @method DbResultInterface put(array $data)
+ * @method DbResultInterface update(array $data)
+ * @method DbResultInterface delete(array $data)
+ * @method DbResultInterface activate(array $data)
+ * @method DbResultInterface deactivate(array $data)
  */
 trait RepositoryTrait
 {
-    public static $getInfo =
+    public $getInfo =
         'SELECT *'
-      .' FROM ' . self::TABLE_NAME
+      .' FROM ' . self::TABLE
       .' WHERE id = :id';
 
-    public static $getList =
+    public $getList =
         'SELECT id, name'
-      .' FROM ' . self::TABLE_NAME
+      .' FROM ' . self::TABLE
       .' LIMIT :limit ' . self::DEFAULT_SORT_DIRECTION
       .' OFFSET :offset';
 
-    public static $put =
-        'INSERT INTO ' . self::TABLE_NAME
+    public $put =
+        'INSERT INTO ' . self::TABLE
       .'   ([fields])'
       .' VALUES [expression]'
       .' RETURNING *';
 
-    public static $update =
-        'UPDATE ' . self::TABLE_NAME
+    public $update =
+        'UPDATE ' . self::TABLE
       .' SET [expression:not(id)]'
       .' WHERE id = :id'
       .' RETURNING *';
 
-    public static $delete =
-        'DELETE FROM ' . self::TABLE_NAME
+    public $delete =
+        'DELETE FROM ' . self::TABLE
       .' WHERE id = :id';
 
-    public static $activate =
-        'UPDATE ' . self::TABLE_NAME
+    public $activate =
+        'UPDATE ' . self::TABLE
       .' SET is_active = true'
       .' WHERE id = :id';
 
-    public static $deactivate =
-        'UPDATE ' . self::TABLE_NAME
+    public $deactivate =
+        'UPDATE ' . self::TABLE
         .' SET is_active = false'
         .' WHERE id = :id';
 }

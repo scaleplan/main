@@ -4,10 +4,13 @@ namespace Scaleplan\Main;
 
 use phpDocumentor\Reflection\DocBlock;
 use Scaleplan\Data\Data;
+use Scaleplan\DTO\DTO;
+use Scaleplan\Helpers\ArrayHelper;
 use function Scaleplan\Helpers\get_required_env;
 use Scaleplan\Helpers\Helper;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Exceptions\RepositoryException;
+use Scaleplan\Main\Exceptions\RepositoryMethodArgsInvalidException;
 use Scaleplan\Main\Exceptions\ServiceMethodNotFoundException;
 use Scaleplan\Result\DbResult;
 
@@ -20,10 +23,8 @@ use Scaleplan\Result\DbResult;
  */
 abstract class AbstractRepository
 {
-    /**
-     * Идентификатор модели в системе Access
-     */
-    public const MODEL_TYPE_ID = 0;
+    public const TABLE = null;
+    public const DEFAULT_SORT_DIRECTION = 'DESC';
 
     /**
      * Вернуть имя базы данных в зависимости от субдомена
@@ -71,6 +72,27 @@ abstract class AbstractRepository
 
     /**
      * @param string $propertyName
+     *
+     * @return \ReflectionClassConstant|\ReflectionProperty
+     *
+     * @throws ServiceMethodNotFoundException
+     * @throws \ReflectionException
+     */
+    private static function getReflector(string $propertyName) : \Reflector
+    {
+        if (!property_exists(static::class, $propertyName)) {
+            return new \ReflectionProperty(static::class, $propertyName);
+        }
+
+        if (!defined("static::$propertyName")) {
+            return new \ReflectionClassConstant(static::class, $propertyName);
+        }
+
+        throw new ServiceMethodNotFoundException();
+    }
+
+    /**
+     * @param string $propertyName
      * @param array $data
      * @param object|null $object
      *
@@ -83,26 +105,35 @@ abstract class AbstractRepository
      * @throws \ReflectionException
      * @throws \Scaleplan\Data\Exceptions\CacheDriverNotSupportedException
      * @throws \Scaleplan\Data\Exceptions\DataException
+     * @throws \Scaleplan\Data\Exceptions\ValidationException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      * @throws \Scaleplan\Db\Exceptions\QueryCountNotMatchParamsException
-     * @throws \Scaleplan\Db\Exceptions\QueryExecutionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Result\Exceptions\ResultException
      */
-    public static function invoke(string $propertyName, array $data, \object $object = null) : DbResult
+    public static function invoke(string $propertyName, array $data, object $object = null) : DbResult
     {
-        if (!property_exists(static::class, $propertyName)) {
-            throw new ServiceMethodNotFoundException();
+        if (!$data && empty($data[0])) {
+            throw new RepositoryMethodArgsInvalidException();
         }
 
-        if (count($data) !== 1 || !\is_array($data[0])) {
-            throw new RepositoryException("Метод $propertyName принимает параметры в виде массива");
+        if (\is_array($data[0]) && !ArrayHelper::isAccos($data[0])) {
+            throw new RepositoryMethodArgsInvalidException();
         }
 
-        $reflectionProperty = new \ReflectionProperty(static::class, $propertyName);
-        $sql = $reflectionProperty->getValue($object);
-        $docBlock = new DocBlock($reflectionProperty->getDocComment());
+        $data = $data[0];
+        if($data instanceof DTO) {
+            $data = $data->toSnakeArray();
+        }
+
+        $reflector = static::getReflector($propertyName);
+        $sql = $reflector->getValue($object);
+        $docBlock = new DocBlock($reflector->getDocComment());
 
         $dbName = static::getDbName($docBlock);
 
@@ -127,10 +158,14 @@ abstract class AbstractRepository
      * @throws \ReflectionException
      * @throws \Scaleplan\Data\Exceptions\CacheDriverNotSupportedException
      * @throws \Scaleplan\Data\Exceptions\DataException
+     * @throws \Scaleplan\Data\Exceptions\ValidationException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      * @throws \Scaleplan\Db\Exceptions\QueryCountNotMatchParamsException
-     * @throws \Scaleplan\Db\Exceptions\QueryExecutionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Result\Exceptions\ResultException
      */
@@ -152,10 +187,14 @@ abstract class AbstractRepository
      * @throws \ReflectionException
      * @throws \Scaleplan\Data\Exceptions\CacheDriverNotSupportedException
      * @throws \Scaleplan\Data\Exceptions\DataException
+     * @throws \Scaleplan\Data\Exceptions\ValidationException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      * @throws \Scaleplan\Db\Exceptions\QueryCountNotMatchParamsException
-     * @throws \Scaleplan\Db\Exceptions\QueryExecutionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Result\Exceptions\ResultException
      */

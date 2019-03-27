@@ -8,6 +8,7 @@ use function Scaleplan\Helpers\get_required_env;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Result\DbResult;
+use Scaleplan\Result\Interfaces\DbResultInterface;
 use Scaleplan\Templater\Templater;
 
 /**
@@ -75,7 +76,7 @@ class View
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
-    public function __construct(string $filePath, \string $header = '', \string $footer = '', array $settings = [])
+    public function __construct(?string $filePath, string $header = '', string $footer = '', array $settings = [])
     {
         $this->filePath = $filePath;
         /** @var CurrentRequestInterface $currentRequest */
@@ -118,7 +119,7 @@ class View
      */
     public function getFullFilePath() : string
     {
-        return $_SERVER['DOCUMENT_ROOT'] .
+        return get_required_env('BUNDLE_') .
             ($this->isMessage
                 ? get_required_env(ConfigConstants::MESSAGES_PATH)
                 : get_required_env(ConfigConstants::VIEWS_PATH)
@@ -130,10 +131,10 @@ class View
     /**
      * Добавить данные для добавления на страницу
      *
-     * @param DbResult $data - данные
+     * @param DbResultInterface $data - данные
      * @param string $parentSelector - в элемент с каким селектором добавлять данные
      */
-    public function addData(DbResult $data, string $parentSelector = 'body') : void
+    public function addData(DbResultInterface $data, string $parentSelector = 'body') : void
     {
         $this->data[$parentSelector] = $data;
     }
@@ -151,7 +152,7 @@ class View
     /**
      * @return string
      */
-    public static function getHeader() : \string
+    public static function getHeader() : string
     {
         return '';
     }
@@ -159,7 +160,7 @@ class View
     /**
      * @return string
      */
-    public static function getFooter() : \string
+    public static function getFooter() : string
     {
         return '';
     }

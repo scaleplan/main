@@ -14,12 +14,18 @@ abstract class AbstractException extends \Exception
     /**
      * AbstractException constructor.
      *
-     * @param string|null $message
+     * @param string $message
      * @param int $code
      * @param \Throwable|null $previous
+     * @param string|null $subject
      */
-    public function __construct(\string $message = '', int $code = 0, \Throwable $previous = null)
+    public function __construct(
+        string $message = '',
+        int $code = 0,
+        \Throwable $previous = null,
+        string $subject = null
+    )
     {
-        parent::__construct($message ?: static::MESSAGE, $code, $previous);
+        parent::__construct(str_replace(':subject', $subject, $message ?? static::MESSAGE), $code, $previous);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Scaleplan\Main\Interfaces;
 
+use Scaleplan\Data\Interfaces\CacheInterface;
 use Scaleplan\Http\Interfaces\CurrentResponseInterface;
 
 /**

@@ -5,10 +5,12 @@ namespace Scaleplan\Main;
 use phpDocumentor\Reflection\DocBlock;
 use Psr\Log\LoggerInterface;
 use Scaleplan\Access\AccessControllerParent;
+use Scaleplan\Data\Data;
+use Scaleplan\Data\Interfaces\CacheInterface;
 use function Scaleplan\DependencyInjection\get_container;
+use Scaleplan\Http\Exceptions\InvalidUrlException;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Http\Interfaces\CurrentResponseInterface;
-use Scaleplan\Main\Interfaces\CacheInterface;
 use Scaleplan\Main\Interfaces\ControllerExecutorInterface;
 use Scaleplan\Main\Interfaces\UserInterface;
 
@@ -19,11 +21,16 @@ use Scaleplan\Main\Interfaces\UserInterface;
  */
 class ControllerExecutor implements ControllerExecutorInterface
 {
-    public const CONTROLLER_NAMESPACE     = 'CONTROLLER_NAMESPACE';
-    public const CONTROLLER_POSTFIX       = 'CONTROLLER_POSTFIX';
-    public const CONTROLLER_METHOD_PREFIX = 'CONTROLLER_METHOD_PREFIX';
+    public const CONTROLLERS_NAMESPACE     = 'CONTROLLERS_NAMESPACE';
+    public const CONTROLLERS_POSTFIX       = 'CONTROLLERS_POSTFIX';
+    public const CONTROLLERS_METHOD_PREFIX = 'CONTROLLERS_METHOD_PREFIX';
 
     public const DOCBLOCK_TAGS_LABEL = 'tags';
+
+    /**
+     * Шаблон проверки правильности формата URL
+     */
+    public const PAGE_URL_TEMPLATE = '/^.+?\/[^\/]+$/';
 
     /**
      * @var LoggerInterface
@@ -53,28 +60,35 @@ class ControllerExecutor implements ControllerExecutorInterface
     /**
      * ControllerExecutor constructor.
      *
-     * @param null|UserInterface $user
-     * @param null|CurrentRequestInterface $request
-     * @param null|CacheInterface $cache
+     * @param UserInterface|null $user
+     * @param CurrentRequestInterface|null $request
+     * @param CacheInterface|null $cache
      *
-     *
+     * @throws Exceptions\CacheException
      * @throws \ReflectionException
+     * @throws \Scaleplan\Data\Exceptions\CacheDriverNotSupportedException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
      * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
     public function __construct(
-        UserInterface $user,
+        UserInterface $user = null,
         CurrentRequestInterface $request = null,
         CacheInterface $cache = null
     )
     {
         $this->request = $request ?? get_container(CurrentRequestInterface::class);
         $this->response = $this->request->getResponse();
-        $this->user = $user;
-        $this->cache = $cache ?? get_container(CacheInterface::class);
-
+        $this->user = $user ?? get_container(UserInterface::class);
+        if (!$cache) {
+            /** @var Data $cache */
+            $cache = get_container(CacheInterface::class, [$this->request->getURL(), $this->request->getParams()]);
+            $cache->setCacheConnect(App::getCache());
+            $cache->setVerifyingFilePath(App::getViewPath());
+        }
+        $this->cache = $cache;
         $this->logger = get_container(LoggerInterface::class);
     }
 
@@ -153,12 +167,12 @@ class ControllerExecutor implements ControllerExecutorInterface
      */
     protected function convertURLToControllerMethod() : array
     {
-        $path = explode('/', $this->request->getURL());
-        $controllerName = getenv(static::CONTROLLER_NAMESPACE)
-            . str_replace(' ', '', ucwords(str_replace('-', ' ', $path[0])))
-            . getenv(static::CONTROLLER_POSTFIX);
-        $methodName = getenv(static::CONTROLLER_METHOD_PREFIX)
-            . str_replace(' ', '', ucwords(str_replace('-', ' ', $path[1])));
+        $path = preg_split ('/[\/?]/', $this->request->getURL());
+        $controllerName = getenv(static::CONTROLLERS_NAMESPACE)
+            . str_replace(' ', '', ucwords(str_replace('-', ' ', $path[1])))
+            . getenv(static::CONTROLLERS_POSTFIX);
+        $methodName = getenv(static::CONTROLLERS_METHOD_PREFIX)
+            . str_replace(' ', '', ucwords(str_replace('-', ' ', $path[2])));
 
         return [$controllerName, $methodName];
     }
@@ -169,6 +183,9 @@ class ControllerExecutor implements ControllerExecutorInterface
      * @return string|null
      *
      * @throws Exceptions\CacheException
+     * @throws \Scaleplan\Data\Exceptions\CacheDriverNotSupportedException
+     * @throws \Scaleplan\Data\Exceptions\DataException
+     * @throws \Scaleplan\Data\Exceptions\ValidationException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
     protected function getCacheValue(\ReflectionMethod $refMethod) : ?string
@@ -183,12 +200,32 @@ class ControllerExecutor implements ControllerExecutorInterface
     }
 
     /**
+     * Проверить URL на соответствие маске по умолчанию
+     *
+     * @param string $url - URL
+     *
+     * @return bool
+     */
+    public static function checkUrl(string $url) : bool
+    {
+        if (!($template = getenv('PAGE_URL_TEMPLATE') ?: static::PAGE_URL_TEMPLATE)) {
+            return true;
+        }
+
+        return !empty($url) && preg_match($template, $url);
+    }
+
+    /**
      * @return CurrentResponseInterface
      *
+     * @throws InvalidUrlException
      * @throws \Scaleplan\Http\Exceptions\EnvVarNotFoundOrInvalidException
      */
     public function execute() : CurrentResponseInterface
     {
+        if (empty($this->request->getURL()) || !static::checkUrl($this->request->getURL())) {
+            throw new InvalidUrlException();
+        }
         try {
             [$controllerName, $methodName] = $this->convertURLToControllerMethod();
 

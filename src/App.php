@@ -4,14 +4,16 @@ namespace Scaleplan\Main;
 
 use Scaleplan\Db\Db;
 use Scaleplan\Db\Interfaces\DbInterface;
-use Scaleplan\DependencyInjection\DependencyInjection;
+use Scaleplan\Db\Interfaces\TableTagsInterface;
+use function Scaleplan\DependencyInjection\get_container;
 use function Scaleplan\Helpers\get_required_env;
 use Scaleplan\Helpers\Helper;
+use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Exceptions\CacheException;
 use Scaleplan\Main\Exceptions\DatabaseException;
 use Scaleplan\Main\Exceptions\InvalidHostException;
-use Scaleplan\Main\Interfaces\UserInterface;
+use Scaleplan\NginxGeo\NginxGeoInterface;
 use Symfony\Component\Yaml\Yaml;
 
 /**
@@ -26,21 +28,31 @@ class App
      *
      * @var array
      */
-    private static $denyDatabases = [];
+    protected static $denyDatabases = [];
 
     /**
      * Подключения к базам данных
      *
      * @var array
      */
-    private static $databases = [];
+    protected static $databases = [];
 
     /**
      * Подключения к кэшам
      *
      * @var array
      */
-    private static $caches = [];
+    protected static $caches = [];
+
+    /**
+     * @var \DateTimeZone|null
+     */
+    protected static $timeZone;
+
+    /**
+     * @var string
+     */
+    protected static $lang;
 
     /**
      * @var array - Данные для подключения к базам данных
@@ -120,22 +132,15 @@ class App
     }
 
     /**
-     * @var UserInterface
-     */
-    protected static $user;
-
-    /**
-     * @return UserInterface
-     */
-    public static function getCurrentUser() : UserInterface
-    {
-        return static::$user;
-    }
-
-    /**
      * Инициализация приложения
      *
      * @throws InvalidHostException
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
     public static function init() : void
     {
@@ -144,7 +149,30 @@ class App
             throw new InvalidHostException('Передан неверный заголовок HTTP-HOST');
         }
 
-        DependencyInjection::addContainers(require __DIR__ . '/containers.php');
+        /** @var NginxGeoInterface $geo */
+        $geo = get_container(NginxGeoInterface::class, [$_REQUEST]);
+
+        $timeZoneName = $geo->getCountryCode() && $geo->getRegionCode()
+            ? geoip_time_zone_by_country_and_region($geo->getCountryCode(), $geo->getRegionCode())
+            : date_default_timezone_get();
+        static::$timeZone = new \DateTimeZone($timeZoneName);
+        static::$lang = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2) ?: get_required_env('DEFAULT_LANG');
+    }
+
+    /**
+     * @return \DateTimeZone|null
+     */
+    public static function getTimeZone() : ?\DateTimeZone
+    {
+        return static::$timeZone;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getLang() : string
+    {
+        return static::$lang;
     }
 
     /**
@@ -165,10 +193,14 @@ class App
      * @return DbInterface
      *
      * @throws DatabaseException
+     * @throws \ReflectionException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      * @throws \Scaleplan\Db\Exceptions\QueryCountNotMatchParamsException
-     * @throws \Scaleplan\Db\Exceptions\QueryExecutionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
     public static function getDB(string $name = null) : DbInterface
@@ -192,7 +224,7 @@ class App
                 $_SESSION['databases'][$name]
                     = Yaml::parse(
                     file_get_contents(
-                        $_SERVER['DOCUMENT_ROOT']
+                        get_required_env(ConfigConstants::BUNDLE_PATH)
                         . get_required_env(ConfigConstants::DB_CONFIGS_PATH)
                         . "/$name.yml"
                     )
@@ -216,14 +248,52 @@ class App
             throw new DatabaseException('В данных о подключении к БД не хватает пароля пользователя БД');
         }
 
-        $dbConnect = new Db(
-            $db['DNS'],
-            $db['USER'],
-            $db['PASSWORD'],
-            !empty($db['OPTIONS']) ? $db['OPTIONS'] : []
+        /** @var DbInterface $dbConnect */
+        $dbConnect = get_container(
+            DbInterface::class,
+            [
+                $db['DNS'],
+                $db['USER'],
+                $db['PASSWORD'],
+                !empty($db['OPTIONS']) ? $db['OPTIONS'] : [],
+            ]
         );
-        $dbConnect->initTablesList(!empty($db['SCHEMAS']) ? $db['SCHEMAS'] : []);
+        /** @var TableTagsInterface $tableTags */
+        $tableTags = get_container(TableTagsInterface::class, [$dbConnect]);
+        $tableTags->initTablesList(!empty($db['SCHEMAS']) ? $db['SCHEMAS'] : []);
 
         return static::$databases[$name] = $dbConnect;
+    }
+
+    /**
+     * @return string|null
+     *
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     */
+    public static function getViewPath() : ?string
+    {
+        /** @var CurrentRequestInterface $request */
+        $request = get_container(CurrentRequestInterface::class);
+        $url = explode('?', $request->getURL())[0];
+        $path = getenv('VIEWS_CONFIG')
+            ? (include (get_required_env(ConfigConstants::BUNDLE_PATH) . getenv('VIEWS_CONFIG')))[$url] ?? null
+            : null;
+        if (!$path) {
+            $path = get_required_env(ConfigConstants::BUNDLE_PATH)
+                . get_required_env(ConfigConstants::VIEWS_PATH)
+                . '/' . static::$lang
+                . $url
+                . '.html';
+            if (!file_exists($path)) {
+                return null;
+            }
+        }
+
+        return $path;
     }
 }
