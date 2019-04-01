@@ -11,15 +11,20 @@ use Scaleplan\Helpers\Helper;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Exceptions\RepositoryException;
 use Scaleplan\Main\Exceptions\RepositoryMethodArgsInvalidException;
-use Scaleplan\Main\Exceptions\ServiceMethodNotFoundException;
+use Scaleplan\Main\Exceptions\RepositoryMethodNotFoundException;
 use Scaleplan\Result\DbResult;
+use Scaleplan\Result\Interfaces\DbResultInterface;
 
 /**
- * Мать всех моделей
- *
- * Class Service
+ * Class AbstractRepository
  *
  * @package Scaleplan\Main
+ *
+ * @method DbResultInterface put(array|DTO $dto)
+ * @method DbResultInterface update(int $id, array|DTO $dto)
+ * @method DbResultInterface getFullInfo(array|DTO $dto)
+ * @method DbResultInterface delete(array|DTO $dto)
+ * @method DbResultInterface getInfo(array|DTO $dto)
  */
 abstract class AbstractRepository
 {
@@ -75,7 +80,7 @@ abstract class AbstractRepository
      *
      * @return \ReflectionClassConstant|\ReflectionProperty
      *
-     * @throws ServiceMethodNotFoundException
+     * @throws RepositoryMethodNotFoundException
      * @throws \ReflectionException
      */
     private static function getReflector(string $propertyName) : \Reflector
@@ -88,7 +93,7 @@ abstract class AbstractRepository
             return new \ReflectionClassConstant(static::class, $propertyName);
         }
 
-        throw new ServiceMethodNotFoundException();
+        throw new RepositoryMethodNotFoundException();
     }
 
     /**
@@ -101,7 +106,7 @@ abstract class AbstractRepository
      * @throws Exceptions\CacheException
      * @throws Exceptions\DatabaseException
      * @throws RepositoryException
-     * @throws ServiceMethodNotFoundException
+     * @throws RepositoryMethodNotFoundException
      * @throws \ReflectionException
      * @throws \Scaleplan\Data\Exceptions\CacheDriverNotSupportedException
      * @throws \Scaleplan\Data\Exceptions\DataException
@@ -154,7 +159,7 @@ abstract class AbstractRepository
      * @throws Exceptions\CacheException
      * @throws Exceptions\DatabaseException
      * @throws RepositoryException
-     * @throws ServiceMethodNotFoundException
+     * @throws RepositoryMethodNotFoundException
      * @throws \ReflectionException
      * @throws \Scaleplan\Data\Exceptions\CacheDriverNotSupportedException
      * @throws \Scaleplan\Data\Exceptions\DataException
@@ -183,7 +188,7 @@ abstract class AbstractRepository
      * @throws Exceptions\CacheException
      * @throws Exceptions\DatabaseException
      * @throws RepositoryException
-     * @throws ServiceMethodNotFoundException
+     * @throws RepositoryMethodNotFoundException
      * @throws \ReflectionException
      * @throws \Scaleplan\Data\Exceptions\CacheDriverNotSupportedException
      * @throws \Scaleplan\Data\Exceptions\DataException

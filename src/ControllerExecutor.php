@@ -11,6 +11,7 @@ use function Scaleplan\DependencyInjection\get_container;
 use Scaleplan\Http\Exceptions\InvalidUrlException;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Http\Interfaces\CurrentResponseInterface;
+use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Interfaces\ControllerExecutorInterface;
 use Scaleplan\Main\Interfaces\UserInterface;
 
@@ -21,10 +22,6 @@ use Scaleplan\Main\Interfaces\UserInterface;
  */
 class ControllerExecutor implements ControllerExecutorInterface
 {
-    public const CONTROLLERS_NAMESPACE     = 'CONTROLLERS_NAMESPACE';
-    public const CONTROLLERS_POSTFIX       = 'CONTROLLERS_POSTFIX';
-    public const CONTROLLERS_METHOD_PREFIX = 'CONTROLLERS_METHOD_PREFIX';
-
     public const DOCBLOCK_TAGS_LABEL = 'tags';
 
     /**
@@ -168,10 +165,10 @@ class ControllerExecutor implements ControllerExecutorInterface
     protected function convertURLToControllerMethod() : array
     {
         $path = preg_split ('/[\/?]/', $this->request->getURL());
-        $controllerName = getenv(static::CONTROLLERS_NAMESPACE)
+        $controllerName = getenv(ConfigConstants::CONTROLLERS_NAMESPACE)
             . str_replace(' ', '', ucwords(str_replace('-', ' ', $path[1])))
-            . getenv(static::CONTROLLERS_POSTFIX);
-        $methodName = getenv(static::CONTROLLERS_METHOD_PREFIX)
+            . getenv(ConfigConstants::CONTROLLERS_POSTFIX);
+        $methodName = getenv(ConfigConstants::CONTROLLERS_METHOD_PREFIX)
             . str_replace(' ', '', ucwords(str_replace('-', ' ', $path[2])));
 
         return [$controllerName, $methodName];

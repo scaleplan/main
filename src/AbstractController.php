@@ -2,16 +2,20 @@
 
 namespace Scaleplan\Main;
 
+use App\Classes\App;
 use Scaleplan\Access\AccessControllerParent;
 use function Scaleplan\DependencyInjection\get_container;
 use Scaleplan\Form\Form;
 use function Scaleplan\Helpers\get_required_env;
+use Scaleplan\Helpers\NameConverter;
 use Scaleplan\Http\CurrentRequest;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Result\DbResult;
 use Scaleplan\Result\HTMLResult;
+use Scaleplan\Result\Interfaces\DbResultInterface;
 use Scaleplan\Result\Interfaces\HTMLResultInterface;
+use Scaleplan\Result\Interfaces\ResultInterface;
 use Symfony\Component\Yaml\Yaml;
 
 /**
@@ -129,10 +133,10 @@ abstract class AbstractController extends AccessControllerParent
     /**
      * Сформировать ответ
      *
-     * @param DbResult $result - результат запроса к БД
+     * @param DbResultInterface $result - результат запроса к БД
      * @param string $parentSelector - куда на странице вставлять результат запроса
      *
-     * @return string
+     * @return ResultInterface
      *
      * @throws \ReflectionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
@@ -143,66 +147,35 @@ abstract class AbstractController extends AccessControllerParent
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
      * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
      */
-    protected function formatResponse(DbResult $result, string $parentSelector = 'body') : string
+    protected function formatResponse(DbResultInterface $result, string $parentSelector = 'body') : ResultInterface
     {
         if ($this->request->isAjax()) {
-            return $result->getJsonResult();
+            return $result;
         }
 
-        $page = new View($this->request->getURL() . '.html');
+        $page = new View(App::getViewPath());
         $page->addData($result, $parentSelector);
 
-        return $page->render();
+        return new HTMLResult($page->render());
     }
 
     /**
-     * Шаблон формы добавления/изменения объекта
+     * @param string $methodName
      *
-     * @param string $type - тип формы ('put' - добавление или 'update' - изменение)
+     * @return string
      *
-     * @return Form
-     *
-     * @throws \Scaleplan\Form\Exceptions\FieldException
-     * @throws \Scaleplan\Form\Exceptions\RadioVariantException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
-    private function getForm(string $type = 'put') : Form
+    public static function getMethodUrl(string $methodName) : string
     {
-        $form = new Form(
-            Yaml::parse(
-                file_get_contents(
-                    get_required_env(ConfigConstants::BUNDLE_PATH)
-                    . get_required_env(static::FORMS_PATH_ENV_NAME)
-                    . '/'
-                    . strtolower($this->getServiceName())
-                    . '.yml'
-                )
-            )
+        $model = strtr(
+            substr(strrchr(__CLASS__, "\\"), 1),
+            [
+                get_required_env(ConfigConstants::CONTROLLERS_POSTFIX) => '',
+                get_required_env(ConfigConstants::CONTROLLERS_METHOD_PREFIX) => '',
+            ]
         );
 
-        if (!empty($form->getFormConf()['form']['action'][$type])) {
-            $form->setFormAction($form->getFormConf()['form']['action'][$type]);
-        }
-
-        if (!empty($form->getFormConf()['title']['text'][$type])) {
-            $form->setTitleText($form->getFormConf()['title']['text'][$type]);
-        }
-
-        return $form;
-    }
-
-    /**
-     * Форма создания
-     *
-     * @accessMethod
-     *
-     * @return HTMLResultInterface
-     *
-     * @throws \Exception
-     */
-    protected function actionCreate() : HTMLResultInterface
-    {
-        $form = $this->getForm();
-        return new HTMLResult($form->render());
+        return NameConverter::camelCaseToSnakeCase($model) . '/' . NameConverter::camelCaseToSnakeCase($methodName);
     }
 }
