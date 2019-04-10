@@ -3,7 +3,7 @@
 namespace Scaleplan\Main\Traits;
 
 use Scaleplan\Db\Db;
-use function Scaleplan\DependencyInjection\get_container;
+use function Scaleplan\DependencyInjection\get_required_container;
 use Scaleplan\DTO\DTO;
 use Scaleplan\Form\Form;
 use Scaleplan\Form\Interfaces\FormInterface;
@@ -50,7 +50,7 @@ trait ControllerTrait
             )
         );
         /** @var AbstractController $this */
-        $form = get_container(FormInterface::class, [$formConfig]);
+        $form = get_required_container(FormInterface::class, [$formConfig]);
 
         if (!empty($form->getFormConf()['form']['action'][$type])) {
             $form->setFormAction($form->getFormConf()['form']['action'][$type]);
@@ -83,7 +83,7 @@ trait ControllerTrait
     protected function actionCreate(FormInterface $form = null) : HTMLResultInterface
     {
         $form = $form ?? $this->getForm();
-        return get_container(HTMLResultInterface::class, [$form->render()]);
+        return get_required_container(HTMLResultInterface::class, [$form->render()]);
     }
 
     /**
@@ -126,7 +126,7 @@ trait ControllerTrait
         $form->addIdField($id);
         $form->setFormValues($result->getFirstResult());
 
-        return get_container(HTMLResultInterface::class, [$form->render()]);
+        return get_required_container(HTMLResultInterface::class, [$form->render()]);
     }
 
     /**
@@ -139,11 +139,6 @@ trait ControllerTrait
      * @return DbResultInterface
      *
      * @throws ControllerException
-     * @throws \ReflectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
     protected function actionPut(DTO $dto) : DbResultInterface
     {
@@ -180,11 +175,6 @@ trait ControllerTrait
      * @return DbResultInterface
      *
      * @throws ControllerException
-     * @throws \ReflectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
     protected function actionUpdate(int $id, DTO $dto) : DbResultInterface
     {
@@ -214,11 +204,6 @@ trait ControllerTrait
      * @return DbResultInterface
      *
      * @throws ControllerException
-     * @throws \ReflectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
     protected function actionDelete(int $id) : DbResultInterface
     {
@@ -257,7 +242,7 @@ trait ControllerTrait
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
      * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
      */
-    protected function actionGetInfo(int $id) : ResultInterface
+    protected function actionInfo(int $id) : ResultInterface
     {
         /** @var AbstractController $this */
         $repo = $this->getRepository();
@@ -295,7 +280,7 @@ trait ControllerTrait
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
      * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
      */
-    protected function actionGetFullInfo(int $id) : ResultInterface
+    protected function actionFullInfo(int $id) : ResultInterface
     {
         /** @var AbstractController $this */
         $repo = $this->getRepository();
@@ -330,7 +315,7 @@ trait ControllerTrait
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
      * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
      */
-    protected function actionGetList(DTO $dto) : ResultInterface
+    protected function actionList(DTO $dto) : ResultInterface
     {
         /** @var AbstractController $this */
         $repo = $this->getRepository();
@@ -338,7 +323,7 @@ trait ControllerTrait
             throw new ControllerException('Репозиторий не найден.');
         }
 
-        $result = $repo->getFullInfo($dto);
+        $result = $repo->getList($dto);
         if (!$result->getResult()) {
             throw new NotFoundException('Объект с таким идентификатором не существует.', 404);
         }

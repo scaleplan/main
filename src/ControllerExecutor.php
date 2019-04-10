@@ -7,13 +7,15 @@ use Psr\Log\LoggerInterface;
 use Scaleplan\Access\AccessControllerParent;
 use Scaleplan\Data\Data;
 use Scaleplan\Data\Interfaces\CacheInterface;
-use function Scaleplan\DependencyInjection\get_container;
+use function Scaleplan\DependencyInjection\get_required_container;
+use function Scaleplan\DependencyInjection\get_required_static_container;
 use Scaleplan\Http\Exceptions\InvalidUrlException;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Http\Interfaces\CurrentResponseInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Interfaces\ControllerExecutorInterface;
 use Scaleplan\Main\Interfaces\UserInterface;
+use Scaleplan\Main\Interfaces\ViewInterface;
 
 /**
  * Class ControllerExecutor
@@ -76,17 +78,17 @@ class ControllerExecutor implements ControllerExecutorInterface
         CacheInterface $cache = null
     )
     {
-        $this->request = $request ?? get_container(CurrentRequestInterface::class);
+        $this->request = $request ?? get_required_container(CurrentRequestInterface::class);
         $this->response = $this->request->getResponse();
-        $this->user = $user ?? get_container(UserInterface::class);
+        $this->user = $user ?? get_required_container(UserInterface::class);
         if (!$cache) {
             /** @var Data $cache */
-            $cache = get_container(CacheInterface::class, [$this->request->getURL(), $this->request->getParams()]);
+            $cache = get_required_container(CacheInterface::class, [$this->request->getURL(), $this->request->getParams()]);
             $cache->setCacheConnect(App::getCache());
             $cache->setVerifyingFilePath(App::getViewPath());
         }
         $this->cache = $cache;
-        $this->logger = get_container(LoggerInterface::class);
+        $this->logger = get_required_container(LoggerInterface::class);
     }
 
     /**
@@ -193,7 +195,7 @@ class ControllerExecutor implements ControllerExecutorInterface
         $this->cache->setCacheConnect(App::getCache());
         $this->cache->setTags(static::getMethodTags($refMethod));
         $this->cache->setParams($this->request->getParams() + $this->request->getCacheAdditionalParams());
-        return $this->cache->getHtml($this->user->getId());
+        return $this->cache->getHtml($this->user->getId())->getResult();
     }
 
     /**
@@ -216,7 +218,12 @@ class ControllerExecutor implements ControllerExecutorInterface
      * @return CurrentResponseInterface
      *
      * @throws InvalidUrlException
-     * @throws \Scaleplan\Http\Exceptions\EnvVarNotFoundOrInvalidException
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerNotFoundException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
     public function execute() : CurrentResponseInterface
     {
@@ -225,7 +232,6 @@ class ControllerExecutor implements ControllerExecutorInterface
         }
         try {
             [$controllerName, $methodName] = $this->convertURLToControllerMethod();
-
             [$refClass, $refMethod, $args] = AccessControllerParent::checkControllerMethod(
                 $controllerName,
                 $methodName,
@@ -237,9 +243,12 @@ class ControllerExecutor implements ControllerExecutorInterface
                 $this->response->setPayload($cacheValue);
                 return $this->response;
             }
+
             $this->response->setPayload(static::executeControllerMethod($refClass, $refMethod, $args));
         } catch (\Throwable $e) {
-            $this->response->buildError($e);
+            /** @var ViewInterface $view */
+            $view = get_required_static_container(ViewInterface::class);
+            $this->response->setPayload($view::renderError($e));
         }
 
         return $this->response;

@@ -3,7 +3,9 @@
 namespace Scaleplan\Main;
 
 use phpDocumentor\Reflection\DocBlock;
-use Scaleplan\Data\Data;
+use Scaleplan\Data\Interfaces\DataInterface;
+use function Scaleplan\DependencyInjection\get_required_container;
+use function Scaleplan\DependencyInjection\get_static_container;
 use Scaleplan\DTO\DTO;
 use Scaleplan\Helpers\ArrayHelper;
 use function Scaleplan\Helpers\get_required_env;
@@ -19,12 +21,6 @@ use Scaleplan\Result\Interfaces\DbResultInterface;
  * Class AbstractRepository
  *
  * @package Scaleplan\Main
- *
- * @method DbResultInterface put(array|DTO $dto)
- * @method DbResultInterface update(int $id, array|DTO $dto)
- * @method DbResultInterface getFullInfo(array|DTO $dto)
- * @method DbResultInterface delete(array|DTO $dto)
- * @method DbResultInterface getInfo(array|DTO $dto)
  */
 abstract class AbstractRepository
 {
@@ -85,11 +81,11 @@ abstract class AbstractRepository
      */
     private static function getReflector(string $propertyName) : \Reflector
     {
-        if (!property_exists(static::class, $propertyName)) {
+        if (property_exists(static::class, $propertyName)) {
             return new \ReflectionProperty(static::class, $propertyName);
         }
 
-        if (!defined("static::$propertyName")) {
+        if (defined("static::$propertyName")) {
             return new \ReflectionClassConstant(static::class, $propertyName);
         }
 
@@ -108,9 +104,6 @@ abstract class AbstractRepository
      * @throws RepositoryException
      * @throws RepositoryMethodNotFoundException
      * @throws \ReflectionException
-     * @throws \Scaleplan\Data\Exceptions\CacheDriverNotSupportedException
-     * @throws \Scaleplan\Data\Exceptions\DataException
-     * @throws \Scaleplan\Data\Exceptions\ValidationException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      * @throws \Scaleplan\Db\Exceptions\QueryCountNotMatchParamsException
@@ -119,9 +112,8 @@ abstract class AbstractRepository
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
-     * @throws \Scaleplan\Result\Exceptions\ResultException
      */
-    public static function invoke(string $propertyName, array $data, object $object = null) : DbResult
+    public static function invoke(string $propertyName, array $data, object $object = null) : DbResultInterface
     {
         if (!$data && empty($data[0])) {
             throw new RepositoryMethodArgsInvalidException();
@@ -137,17 +129,23 @@ abstract class AbstractRepository
         }
 
         $reflector = static::getReflector($propertyName);
-        $sql = $reflector->getValue($object);
-        $docBlock = new DocBlock($reflector->getDocComment());
+        if ($reflector instanceof \ReflectionClassConstant) {
+            $sql = $reflector->getValue();
+        } else {
+            $sql = $reflector->getValue($object);
+        }
 
+        $docBlock = new DocBlock($reflector->getDocComment());
         $dbName = static::getDbName($docBlock);
 
-        $dataStory = Data::getInstance($sql, $data);
-        $dataStory->setCacheConnect(App::getCache());
-        $dataStory->setDbConnect(App::getDB($dbName));
-        $dataStory->setPrefix(static::getPrefix($docBlock));
+        /** @var App $app */
+        $app = get_static_container(App::class);
+        $data = get_required_container(DataInterface::class, [$sql, $data]);
+        $data->setCacheConnect($app::getCache());
+        $data->setDbConnect($app::getDB($dbName));
+        $data->setPrefix(static::getPrefix($docBlock));
 
-        return $dataStory->getValue();
+        return $data->getValue();
     }
 
     /**
@@ -161,9 +159,6 @@ abstract class AbstractRepository
      * @throws RepositoryException
      * @throws RepositoryMethodNotFoundException
      * @throws \ReflectionException
-     * @throws \Scaleplan\Data\Exceptions\CacheDriverNotSupportedException
-     * @throws \Scaleplan\Data\Exceptions\DataException
-     * @throws \Scaleplan\Data\Exceptions\ValidationException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      * @throws \Scaleplan\Db\Exceptions\QueryCountNotMatchParamsException
@@ -172,7 +167,6 @@ abstract class AbstractRepository
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
-     * @throws \Scaleplan\Result\Exceptions\ResultException
      */
     public static function __callStatic(string $propertyName, array $data) : DbResult
     {
@@ -190,9 +184,6 @@ abstract class AbstractRepository
      * @throws RepositoryException
      * @throws RepositoryMethodNotFoundException
      * @throws \ReflectionException
-     * @throws \Scaleplan\Data\Exceptions\CacheDriverNotSupportedException
-     * @throws \Scaleplan\Data\Exceptions\DataException
-     * @throws \Scaleplan\Data\Exceptions\ValidationException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      * @throws \Scaleplan\Db\Exceptions\QueryCountNotMatchParamsException
@@ -201,7 +192,6 @@ abstract class AbstractRepository
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
-     * @throws \Scaleplan\Result\Exceptions\ResultException
      */
     public function __call(string $propertyName, array $data) : DbResult
     {

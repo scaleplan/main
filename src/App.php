@@ -5,7 +5,7 @@ namespace Scaleplan\Main;
 use Scaleplan\Db\Db;
 use Scaleplan\Db\Interfaces\DbInterface;
 use Scaleplan\Db\Interfaces\TableTagsInterface;
-use function Scaleplan\DependencyInjection\get_container;
+use function Scaleplan\DependencyInjection\get_required_container;
 use function Scaleplan\Helpers\get_required_env;
 use Scaleplan\Helpers\Helper;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
@@ -53,16 +53,6 @@ class App
      * @var string
      */
     protected static $lang;
-
-    /**
-     * @var array - Данные для подключения к базам данных
-     */
-    private static $main = [
-        'DNS'      => 'pgsql:host=/var/run/postgresql;port=5432;dbname=main',
-        'USER'     => 'user',
-        'PASSWORD' => 'password',
-        'SCHEMAS'  => ['public', 'users'],
-    ];
 
     /**
      * Данные для подключение к кэшу
@@ -150,7 +140,7 @@ class App
         }
 
         /** @var NginxGeoInterface $geo */
-        $geo = get_container(NginxGeoInterface::class, [$_REQUEST]);
+        $geo = get_required_container(NginxGeoInterface::class, [$_REQUEST]);
 
         $timeZoneName = $geo->getCountryCode() && $geo->getRegionCode()
             ? geoip_time_zone_by_country_and_region($geo->getCountryCode(), $geo->getRegionCode())
@@ -217,8 +207,6 @@ class App
             return static::$databases[$name];
         }
 
-        $_SESSION['databases'] = $_SESSION['databases'] ?? [];
-
         if (empty(static::$$name)) {
             if (empty($_SESSION['databases'][$name])) {
                 $_SESSION['databases'][$name]
@@ -249,7 +237,7 @@ class App
         }
 
         /** @var DbInterface $dbConnect */
-        $dbConnect = get_container(
+        $dbConnect = get_required_container(
             DbInterface::class,
             [
                 $db['DNS'],
@@ -259,7 +247,7 @@ class App
             ]
         );
         /** @var TableTagsInterface $tableTags */
-        $tableTags = get_container(TableTagsInterface::class, [$dbConnect]);
+        $tableTags = get_required_container(TableTagsInterface::class, [$dbConnect]);
         $tableTags->initTablesList(!empty($db['SCHEMAS']) ? $db['SCHEMAS'] : []);
 
         return static::$databases[$name] = $dbConnect;
@@ -278,20 +266,16 @@ class App
     public static function getViewPath() : ?string
     {
         /** @var CurrentRequestInterface $request */
-        $request = get_container(CurrentRequestInterface::class);
+        $request = get_required_container(CurrentRequestInterface::class);
         $url = explode('?', $request->getURL())[0];
         $path = getenv('VIEWS_CONFIG')
             ? (include (get_required_env(ConfigConstants::BUNDLE_PATH) . getenv('VIEWS_CONFIG')))[$url] ?? null
             : null;
         if (!$path) {
-            $path = get_required_env(ConfigConstants::BUNDLE_PATH)
-                . get_required_env(ConfigConstants::VIEWS_PATH)
+            $path = get_required_env(ConfigConstants::TEMPLATES_PATH)
                 . '/' . static::$lang
                 . $url
                 . '.html';
-            if (!file_exists($path)) {
-                return null;
-            }
         }
 
         return $path;

@@ -37,7 +37,6 @@ interface ControllerExecutorInterface
      *
      * @throws \ReflectionException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
-     * @throws \Scaleplan\Http\Exceptions\EnvVarNotFoundOrInvalidException
      */
     public function execute() : CurrentResponseInterface;
 }

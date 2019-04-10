@@ -2,11 +2,14 @@
 
 namespace Scaleplan\Main;
 
+use phpQuery;
 use Scaleplan\Access\Access;
-use function Scaleplan\DependencyInjection\get_container;
+use function Scaleplan\DependencyInjection\get_required_container;
+use function Scaleplan\Helpers\get_env;
 use function Scaleplan\Helpers\get_required_env;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
+use Scaleplan\Main\Interfaces\ViewInterface;
 use Scaleplan\Result\DbResult;
 use Scaleplan\Result\Interfaces\DbResultInterface;
 use Scaleplan\Templater\Templater;
@@ -18,9 +21,9 @@ use Scaleplan\Templater\Templater;
  *
  * @package Scaleplan\Main
  */
-class View
+class View implements ViewInterface
 {
-    public const ERROR_TEMPLATE_PATH = 'error/universal.html';
+    public const ERROR_TEMPLATE_PATH = '/universal.html';
 
     /**
      * Путь к файлу шаблона
@@ -32,14 +35,14 @@ class View
     /**
      * Шапка
      *
-     * @var string
+     * @var string|null
      */
-    protected $header;
+    protected $headerPath;
 
     /**
-     * @var string
+     * @var string|null
      */
-    protected $footer;
+    protected $footerPath;
 
     /**
      * Настройки шаблона
@@ -66,8 +69,8 @@ class View
      * View constructor.
      *
      * @param string $filePath - путь к файлу шаблона
-     * @param string $header - шапка
-     * @param string $footer - подвал
+     * @param string|null $headerPath - шапка
+     * @param string|null $footerPath - подвал
      * @param array $settings - настройки шаблонизатора
      *
      * @throws \ReflectionException
@@ -76,15 +79,20 @@ class View
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
-    public function __construct(?string $filePath, string $header = '', string $footer = '', array $settings = [])
+    public function __construct(
+        ?string $filePath,
+        string $headerPath = null,
+        string $footerPath = null,
+        array $settings = []
+    )
     {
         $this->filePath = $filePath;
         /** @var CurrentRequestInterface $currentRequest */
-        $currentRequest = get_container(CurrentRequestInterface::class);
-        $this->header = $header ?? ($currentRequest && !$currentRequest->isAjax() ? static::getHeader() : '');
-        $this->footer = $footer ?? ($currentRequest && !$currentRequest->isAjax() ? static::getHeader() : '');
+        $currentRequest = get_required_container(CurrentRequestInterface::class);
+        $this->headerPath = $headerPath;
+        $this->footerPath = $footerPath;
         /** @var Access $access */
-        $access = Access::create(App::getCurrentUser()->getId());
+        $access = get_required_container(Access::class);
         $this->settings['forbiddenSelectors']
             = $this->settings['forbiddenSelectors'] ?? $access->getForbiddenSelectors($currentRequest->getURL());
         $this->settings = $settings;
@@ -113,19 +121,19 @@ class View
     /**
      * Полный путь к файлу относительно директории с шаблонами представлений
      *
-     * @return string
+     * @param string|null $filePath
+     *
+     * @return string|null
      *
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
-    public function getFullFilePath() : string
+    protected static function getFullFilePath(?string $filePath) : ?string
     {
-        return get_required_env('BUNDLE_') .
-            ($this->isMessage
-                ? get_required_env(ConfigConstants::MESSAGES_PATH)
-                : get_required_env(ConfigConstants::VIEWS_PATH)
-            )
-            . '/'
-            . $this->filePath;
+        if (null === $filePath) {
+            return null;
+        }
+
+        return get_required_env(ConfigConstants::BUNDLE_PATH) . get_required_env('VIEWS_PATH') . $filePath;
     }
 
     /**
@@ -150,19 +158,21 @@ class View
     }
 
     /**
-     * @return string
+     * @return \phpQueryObject
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
-    public static function getHeader() : string
+    public function getHeader() : \phpQueryObject
     {
-        return '';
+        return phpQuery::newDocumentFileHTML(static::getFullFilePath($this->headerPath));;
     }
 
     /**
-     * @return string
+     * @return \phpQueryObject
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
-    public static function getFooter() : string
+    public function getFooter() : \phpQueryObject
     {
-        return '';
+        return phpQuery::newDocumentFileHTML(static::getFullFilePath($this->footerPath));;
     }
 
     /**
@@ -176,12 +186,13 @@ class View
      */
     public function render() : \phpQueryObject
     {
-        $page = new Templater($this->getFullFilePath(), $this->settings);
+        $page = new Templater(static::getFullFilePath($this->filePath), $this->settings);
         $page->removeForbidden();
         $page->renderIncludes();
         $template = $page->getTemplate();
-        $template->find('body')->prepend($this->header);
-        $template->find('body')->append($this->footer);
+        $body = $template->find('body');
+        $body->prepend($this->getHeader());
+        $body->append($this->getFooter());
 
         foreach ($this->data as $selector => $data) {
             $page->setMultiData($data->getArrayResult(), $selector);
@@ -195,16 +206,20 @@ class View
      *
      * @return \phpQueryObject
      *
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Result\Exceptions\ResultException
-     * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
-     * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
      */
-    public function renderError(\Throwable $e) : \phpQueryObject
+    public static function renderError(\Throwable $e) : \phpQueryObject
     {
-        $this->filePath = get_required_env('ERROR_TEMPLATE_PATH');
-        $this->data = [new DbResult(['code' => $e->getCode(), 'message' => $e->getMessage()])];
+        $view = new static(get_required_env('ERRORS_PATH')
+            . (get_env('ERROR_TEMPLATE_PATH') ?? static::ERROR_TEMPLATE_PATH));
+        $view->addData(new DbResult(['code' => $e->getCode(), 'message' => $e->getMessage()]));
 
-        return $this->render();
+        return $view->render();
     }
 }

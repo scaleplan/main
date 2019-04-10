@@ -4,8 +4,7 @@ namespace Scaleplan\Main;
 
 use App\Classes\App;
 use Scaleplan\Access\AccessControllerParent;
-use function Scaleplan\DependencyInjection\get_container;
-use Scaleplan\Form\Form;
+use function Scaleplan\DependencyInjection\get_required_container;
 use function Scaleplan\Helpers\get_required_env;
 use Scaleplan\Helpers\NameConverter;
 use Scaleplan\Http\CurrentRequest;
@@ -54,18 +53,18 @@ abstract class AbstractController extends AccessControllerParent
      */
     public function __construct()
     {
-        $this->request = get_container(CurrentRequestInterface::class);
+        $this->request = get_required_container(CurrentRequestInterface::class);
 
         $model = str_replace(
             get_required_env(ConfigConstants::CONTROLLERS_POSTFIX),
             '',
-            substr(strrchr(__CLASS__, "\\"), 1)
+            substr(strrchr(static::class, "\\"), 1)
         );
         $this->repositoryName = get_required_env(ConfigConstants::REPOSITORIES_NAMESPACE)
-            . '/' . lcfirst($model) . get_required_env(ConfigConstants::REPOSITORIES_POSTFIX);
+            . ucfirst($model) . get_required_env(ConfigConstants::REPOSITORIES_POSTFIX);
 
         $this->serviceName = get_required_env(ConfigConstants::SERVICES_NAMESPACE)
-            . '/' . lcfirst($model) . get_required_env(ConfigConstants::SERVICES_POSTFIX);
+            . ucfirst($model) . get_required_env(ConfigConstants::SERVICES_POSTFIX);
     }
 
     /**
@@ -104,30 +103,18 @@ abstract class AbstractController extends AccessControllerParent
      * Вернуть связанный с контроллером репозиторий
      *
      * @return AbstractRepository|null
-     *
-     * @throws \ReflectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
     public function getRepository() : ?AbstractRepository
     {
-        return get_container($this->repositoryName);
+        return class_exists($this->repositoryName) ? new $this->repositoryName : null;
     }
 
     /**
      * @return AbstractService|null
-     *
-     * @throws \ReflectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
     public function getService() : ?AbstractService
     {
-        return get_container($this->serviceName);
+        return class_exists($this->serviceName) ? new $this->serviceName : null;
     }
 
     /**
