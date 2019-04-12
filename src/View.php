@@ -163,7 +163,7 @@ class View implements ViewInterface
      */
     public function getHeader() : \phpQueryObject
     {
-        return phpQuery::newDocumentFileHTML(static::getFullFilePath($this->headerPath));;
+        return phpQuery::newDocumentFileHTML(static::getFullFilePath($this->headerPath));
     }
 
     /**
@@ -172,7 +172,7 @@ class View implements ViewInterface
      */
     public function getFooter() : \phpQueryObject
     {
-        return phpQuery::newDocumentFileHTML(static::getFullFilePath($this->footerPath));;
+        return phpQuery::newDocumentFileHTML(static::getFullFilePath($this->footerPath));
     }
 
     /**

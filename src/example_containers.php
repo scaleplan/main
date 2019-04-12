@@ -17,7 +17,7 @@ return [
     CurrentRequestInterface::class => CurrentRequest::class,
     CacheInterface::class          => Data::class . '::getInstance',
     NginxGeoInterface::class       => NginxGeo::class,
-    LoggerInterface::class         => function (int $minLevel) : LoggerInterface {
+    LoggerInterface::class         => static function (int $minLevel) : LoggerInterface {
         $logPath = get_required_env('LOG_PATH');
 
         $logger = new Logger(get_required_env('APP_NAME'));

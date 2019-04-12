@@ -160,6 +160,8 @@ trait ControllerTrait
 
             throw $e;
         }
+
+        return $result;
     }
 
     /**

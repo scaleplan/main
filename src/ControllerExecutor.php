@@ -8,14 +8,12 @@ use Scaleplan\Access\AccessControllerParent;
 use Scaleplan\Data\Data;
 use Scaleplan\Data\Interfaces\CacheInterface;
 use function Scaleplan\DependencyInjection\get_required_container;
-use function Scaleplan\DependencyInjection\get_required_static_container;
 use Scaleplan\Http\Exceptions\InvalidUrlException;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Http\Interfaces\CurrentResponseInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Interfaces\ControllerExecutorInterface;
 use Scaleplan\Main\Interfaces\UserInterface;
-use Scaleplan\Main\Interfaces\ViewInterface;
 
 /**
  * Class ControllerExecutor
@@ -63,9 +61,9 @@ class ControllerExecutor implements ControllerExecutorInterface
      * @param CurrentRequestInterface|null $request
      * @param CacheInterface|null $cache
      *
-     * @throws Exceptions\CacheException
      * @throws \ReflectionException
-     * @throws \Scaleplan\Data\Exceptions\CacheDriverNotSupportedException
+     * @throws \Scaleplan\Data\Exceptions\DataException
+     * @throws \Scaleplan\Data\Exceptions\ValidationException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
      * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
@@ -84,7 +82,6 @@ class ControllerExecutor implements ControllerExecutorInterface
         if (!$cache) {
             /** @var Data $cache */
             $cache = get_required_container(CacheInterface::class, [$this->request->getURL(), $this->request->getParams()]);
-            $cache->setCacheConnect(App::getCache());
             $cache->setVerifyingFilePath(App::getViewPath());
         }
         $this->cache = $cache;
@@ -181,18 +178,15 @@ class ControllerExecutor implements ControllerExecutorInterface
      *
      * @return string|null
      *
-     * @throws Exceptions\CacheException
-     * @throws \Scaleplan\Data\Exceptions\CacheDriverNotSupportedException
      * @throws \Scaleplan\Data\Exceptions\DataException
      * @throws \Scaleplan\Data\Exceptions\ValidationException
-     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
     protected function getCacheValue(\ReflectionMethod $refMethod) : ?string
     {
         if (!$this->cache || !$this->user) {
             return null;
         }
-        $this->cache->setCacheConnect(App::getCache());
+
         $this->cache->setTags(static::getMethodTags($refMethod));
         $this->cache->setParams($this->request->getParams() + $this->request->getCacheAdditionalParams());
         return $this->cache->getHtml($this->user->getId())->getResult();
@@ -218,12 +212,6 @@ class ControllerExecutor implements ControllerExecutorInterface
      * @return CurrentResponseInterface
      *
      * @throws InvalidUrlException
-     * @throws \ReflectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerNotFoundException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
     public function execute() : CurrentResponseInterface
     {
@@ -245,10 +233,9 @@ class ControllerExecutor implements ControllerExecutorInterface
             }
 
             $this->response->setPayload(static::executeControllerMethod($refClass, $refMethod, $args));
+            $this->response->send();
         } catch (\Throwable $e) {
-            /** @var ViewInterface $view */
-            $view = get_required_static_container(ViewInterface::class);
-            $this->response->setPayload($view::renderError($e));
+            $this->response->buildError($e);
         }
 
         return $this->response;
