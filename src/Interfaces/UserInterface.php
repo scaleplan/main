@@ -15,4 +15,9 @@ interface UserInterface
      * @return int
      */
     public function getId() : int;
+
+    /**
+     * @return bool
+     */
+    public function isGuest() : bool;
 }

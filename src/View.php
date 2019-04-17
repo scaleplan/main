@@ -127,7 +127,7 @@ class View implements ViewInterface
      *
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
-    protected static function getFullFilePath(?string $filePath) : ?string
+    public static function getFullFilePath(?string $filePath) : ?string
     {
         if (null === $filePath) {
             return null;

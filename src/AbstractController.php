@@ -10,12 +10,9 @@ use Scaleplan\Helpers\NameConverter;
 use Scaleplan\Http\CurrentRequest;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
-use Scaleplan\Result\DbResult;
 use Scaleplan\Result\HTMLResult;
 use Scaleplan\Result\Interfaces\DbResultInterface;
-use Scaleplan\Result\Interfaces\HTMLResultInterface;
 use Scaleplan\Result\Interfaces\ResultInterface;
-use Symfony\Component\Yaml\Yaml;
 
 /**
  * Class Controller
@@ -42,6 +39,11 @@ abstract class AbstractController extends AccessControllerParent
     protected $request;
 
     /**
+     * @var string
+     */
+    protected $modelName;
+
+    /**
      * AbstractController constructor.
      *
      * @throws \ReflectionException
@@ -55,16 +57,24 @@ abstract class AbstractController extends AccessControllerParent
     {
         $this->request = get_required_container(CurrentRequestInterface::class);
 
-        $model = str_replace(
+        $this->modelName = str_replace(
             get_required_env(ConfigConstants::CONTROLLERS_POSTFIX),
             '',
-            substr(strrchr(static::class, "\\"), 1)
+            ucfirst(substr(strrchr(static::class, "\\"), 1))
         );
         $this->repositoryName = get_required_env(ConfigConstants::REPOSITORIES_NAMESPACE)
-            . ucfirst($model) . get_required_env(ConfigConstants::REPOSITORIES_POSTFIX);
+            . $this->modelName . get_required_env(ConfigConstants::REPOSITORIES_POSTFIX);
 
         $this->serviceName = get_required_env(ConfigConstants::SERVICES_NAMESPACE)
-            . ucfirst($model) . get_required_env(ConfigConstants::SERVICES_POSTFIX);
+            . $this->modelName . get_required_env(ConfigConstants::SERVICES_POSTFIX);
+    }
+
+    /**
+     * @return string
+     */
+    public function getModelName() : string
+    {
+        return $this->modelName;
     }
 
     /**
@@ -156,13 +166,15 @@ abstract class AbstractController extends AccessControllerParent
     public static function getMethodUrl(string $methodName) : string
     {
         $model = strtr(
-            substr(strrchr(__CLASS__, "\\"), 1),
+            substr(strrchr(static::class, "\\"), 1),
             [
                 get_required_env(ConfigConstants::CONTROLLERS_POSTFIX) => '',
                 get_required_env(ConfigConstants::CONTROLLERS_METHOD_PREFIX) => '',
             ]
         );
 
-        return NameConverter::camelCaseToSnakeCase($model) . '/' . NameConverter::camelCaseToSnakeCase($methodName);
+        return
+            '/' . NameConverter::camelCaseToSnakeCase($model)
+            . '/' . NameConverter::camelCaseToSnakeCase($methodName);
     }
 }

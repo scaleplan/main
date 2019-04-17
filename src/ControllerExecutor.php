@@ -82,7 +82,7 @@ class ControllerExecutor implements ControllerExecutorInterface
         if (!$cache) {
             /** @var Data $cache */
             $cache = get_required_container(CacheInterface::class, [$this->request->getURL(), $this->request->getParams()]);
-            $cache->setVerifyingFilePath(App::getViewPath());
+            $cache->setVerifyingFilePath(View::getFullFilePath(App::getViewPath()));
         }
         $this->cache = $cache;
         $this->logger = get_required_container(LoggerInterface::class);
@@ -212,6 +212,7 @@ class ControllerExecutor implements ControllerExecutorInterface
      * @return CurrentResponseInterface
      *
      * @throws InvalidUrlException
+     * @throws \Throwable
      */
     public function execute() : CurrentResponseInterface
     {
@@ -234,10 +235,11 @@ class ControllerExecutor implements ControllerExecutorInterface
 
             $this->response->setPayload(static::executeControllerMethod($refClass, $refMethod, $args));
             $this->response->send();
+
+            return $this->response;
         } catch (\Throwable $e) {
             $this->response->buildError($e);
+            throw $e;
         }
-
-        return $this->response;
     }
 }

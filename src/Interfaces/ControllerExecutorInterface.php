@@ -34,9 +34,6 @@ interface ControllerExecutorInterface
 
     /**
      * @return CurrentResponseInterface
-     *
-     * @throws \ReflectionException
-     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
     public function execute() : CurrentResponseInterface;
 }

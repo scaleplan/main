@@ -43,9 +43,10 @@ trait ControllerTrait
         $formConfig = Yaml::parse(
             file_get_contents(
                 get_required_env(ConfigConstants::BUNDLE_PATH)
+                . get_required_env(ConfigConstants::VIEWS_PATH)
                 . get_required_env(AbstractController::FORMS_PATH_ENV_NAME)
                 . '/'
-                . strtolower($this->getServiceName())
+                . strtolower($this->getModelName())
                 . '.yml'
             )
         );

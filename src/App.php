@@ -13,6 +13,7 @@ use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Exceptions\CacheException;
 use Scaleplan\Main\Exceptions\DatabaseException;
 use Scaleplan\Main\Exceptions\InvalidHostException;
+use Scaleplan\Main\Interfaces\UserInterface;
 use Scaleplan\NginxGeo\NginxGeoInterface;
 use Symfony\Component\Yaml\Yaml;
 
@@ -23,6 +24,8 @@ use Symfony\Component\Yaml\Yaml;
  */
 class App
 {
+    public const CACHE_PERSISTENT_ID = 125437;
+
     /**
      * Базы данных, подключение к которым запрещено
      *
@@ -52,7 +55,12 @@ class App
     /**
      * @var string
      */
-    protected static $lang;
+    protected static $locale;
+
+    /**
+     * @var string
+     */
+    protected static $host;
 
     /**
      * Данные для подключение к кэшу
@@ -78,7 +86,7 @@ class App
     )
     {
         $cacheType = $cacheType ?? get_required_env('CACHE_TYPE');
-        $connectType = $connectType ?? get_required_env('CACHE_CONNECT_TYPE');
+        $connectType = $connectType ?? ((bool)get_required_env('CACHE_PCONNECT') ? 'pconnect' : 'connect');
         $hostOrSocket = $hostOrSocket ?? get_required_env('CACHE_HOST_OR_SOCKET');
         $port = $port ?? (int)get_required_env('CACHE_PORT');
 
@@ -105,7 +113,7 @@ class App
         }
 
         if ($cacheType === 'memcached') {
-            $memcached = new \Memcached();
+            $memcached = $connectType === 'pconnect' ? new \Memcached(static::CACHE_PERSISTENT_ID) : new \Memcached();
             if (!$memcached->addServer($hostOrSocket, $port)) {
                 throw new CacheException('Не удалось подключиться к Memcached');
             }
@@ -134,10 +142,11 @@ class App
      */
     public static function init() : void
     {
-        $host = $_SERVER['HTTP_HOST'];
-        if (!Helper::hostCheck($host)) {
+        if (!Helper::hostCheck($_SERVER['HTTP_HOST'])) {
             throw new InvalidHostException('Передан неверный заголовок HTTP-HOST');
         }
+
+        static::$host = $_SERVER['HTTP_HOST'];
 
         /** @var NginxGeoInterface $geo */
         $geo = get_required_container(NginxGeoInterface::class, [$_REQUEST]);
@@ -146,7 +155,15 @@ class App
             ? geoip_time_zone_by_country_and_region($geo->getCountryCode(), $geo->getRegionCode())
             : date_default_timezone_get();
         static::$timeZone = new \DateTimeZone($timeZoneName);
-        static::$lang = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2) ?: get_required_env('DEFAULT_LANG');
+        static::$locale = locale_accept_from_http($_SERVER['HTTP_ACCEPT_LANGUAGE']) ?: get_required_env('DEFAULT_LANG');
+    }
+
+    /**
+     * @return string
+     */
+    public static function getHost() : string
+    {
+        return self::$host;
     }
 
     /**
@@ -160,9 +177,9 @@ class App
     /**
      * @return string
      */
-    public static function getLang() : string
+    public static function getLocale() : string
     {
-        return static::$lang;
+        return static::$locale;
     }
 
     /**
@@ -248,7 +265,13 @@ class App
         );
         /** @var TableTagsInterface $tableTags */
         $tableTags = get_required_container(TableTagsInterface::class, [$dbConnect]);
-        $tableTags->initTablesList(!empty($db['SCHEMAS']) ? $db['SCHEMAS'] : []);
+        $tableTags->initTablesList(!empty($db['SCHEMAS']) ? $db['SCHEMAS'] : null);
+
+        /** @var UserInterface $user */
+        $user = get_required_container(UserInterface::class);
+        $dbConnect->setUserId($user->getId());
+        $dbConnect->setLocale(static::getLocale());
+        $dbConnect->setTimeZone(static::getTimeZone());
 
         return static::$databases[$name] = $dbConnect;
     }
@@ -273,7 +296,7 @@ class App
             : null;
         if (!$path) {
             $path = get_required_env(ConfigConstants::TEMPLATES_PATH)
-                . '/' . static::$lang
+                . '/' . static::getLocale()
                 . $url
                 . '.html';
         }

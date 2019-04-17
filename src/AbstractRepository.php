@@ -99,7 +99,6 @@ abstract class AbstractRepository
      *
      * @return DbResult
      *
-     * @throws Exceptions\CacheException
      * @throws Exceptions\DatabaseException
      * @throws RepositoryException
      * @throws RepositoryMethodNotFoundException
@@ -140,8 +139,8 @@ abstract class AbstractRepository
 
         /** @var App $app */
         $app = get_static_container(App::class);
+        /** @var DataInterface $data */
         $data = get_required_container(DataInterface::class, [$sql, $data]);
-        $data->setCacheConnect($app::getCache());
         $data->setDbConnect($app::getDB($dbName));
         $data->setPrefix(static::getPrefix($docBlock));
 
