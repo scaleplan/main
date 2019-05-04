@@ -4,16 +4,19 @@ namespace Scaleplan\Main;
 
 use phpDocumentor\Reflection\DocBlock;
 use Psr\Log\LoggerInterface;
+use Scaleplan\Access\Access;
 use Scaleplan\Access\AccessControllerParent;
 use Scaleplan\Data\Data;
 use Scaleplan\Data\Interfaces\CacheInterface;
 use function Scaleplan\DependencyInjection\get_required_container;
+use Scaleplan\Http\Constants\ContentTypes;
 use Scaleplan\Http\Exceptions\InvalidUrlException;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Http\Interfaces\CurrentResponseInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Interfaces\ControllerExecutorInterface;
 use Scaleplan\Main\Interfaces\UserInterface;
+use Scaleplan\Result\Interfaces\ArrayResultInterface;
 
 /**
  * Class ControllerExecutor
@@ -221,7 +224,10 @@ class ControllerExecutor implements ControllerExecutorInterface
         }
         try {
             [$controllerName, $methodName] = $this->convertURLToControllerMethod();
-            [$refClass, $refMethod, $args] = AccessControllerParent::checkControllerMethod(
+
+            $access = get_required_container(Access::class);
+            $accessControllerParent = new AccessControllerParent($access);
+            [$refClass, $refMethod, $args] = $accessControllerParent->checkControllerMethod(
                 $controllerName,
                 $methodName,
                 $this->request->getParams()
@@ -233,12 +239,17 @@ class ControllerExecutor implements ControllerExecutorInterface
                 return $this->response;
             }
 
-            $this->response->setPayload(static::executeControllerMethod($refClass, $refMethod, $args));
+            $result = static::executeControllerMethod($refClass, $refMethod, $args);
+            if ($result instanceof ArrayResultInterface) {
+                $this->response->setContentType(ContentTypes::JSON);
+            }
+
+            $this->response->setPayload($result);
             $this->response->send();
 
             return $this->response;
         } catch (\Throwable $e) {
-            $this->response->buildError($e);
+            //$this->response->buildError($e);
             throw $e;
         }
     }

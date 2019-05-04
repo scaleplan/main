@@ -67,8 +67,6 @@ trait ControllerTrait
     /**
      * Форма создания
      *
-     * @accessMethod
-     *
      * @param FormInterface|null $form
      *
      * @return HTMLResultInterface
@@ -89,8 +87,6 @@ trait ControllerTrait
 
     /**
      * Форма редактирования модели
-     *
-     * @accessMethod
      *
      * @accessFilter id
      *
@@ -133,8 +129,6 @@ trait ControllerTrait
     /**
      * Сохранить новую модель
      *
-     * @accessMethod
-     *
      * @param DTO $dto
      *
      * @return DbResultInterface
@@ -146,10 +140,8 @@ trait ControllerTrait
         try {
             /** @var AbstractController $this */
             $repo = $this->getRepository();
-            if (!$repo) {
-                throw new ControllerException('Репозиторий не найден.');
-            }
 
+            /** @var DbResultInterface $result */
             $result = $repo->put($dto);
             if (!$result->getResult()) {
                 throw new ControllerException('Не удалось создать объект.');
@@ -167,8 +159,6 @@ trait ControllerTrait
 
     /**
      * Изменить модель
-     *
-     * @accessMethod
      *
      * @accessFilter id
      *
@@ -198,8 +188,6 @@ trait ControllerTrait
     /**
      * Удаление модели
      *
-     * @accessMethod
-     *
      * @accessFilter id
      *
      * @param int $id - идентификатор модели
@@ -226,8 +214,6 @@ trait ControllerTrait
 
     /**
      * Сжатая информация о модели
-     *
-     * @accessMethod
      *
      * @accessFilter id
      *
@@ -264,8 +250,6 @@ trait ControllerTrait
     /**
      * Полная информация о модели
      *
-     * @accessMethod
-     *
      * @accessFilter id
      *
      * @param int $id - идентификатор модели
@@ -301,8 +285,6 @@ trait ControllerTrait
 
     /**
      * Список моделей
-     *
-     * @accessMethod
      *
      * @param DTO $dto
      *

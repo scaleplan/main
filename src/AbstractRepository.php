@@ -81,12 +81,12 @@ abstract class AbstractRepository
      */
     private static function getReflector(string $propertyName) : \Reflector
     {
-        if (property_exists(static::class, $propertyName)) {
-            return new \ReflectionProperty(static::class, $propertyName);
+        if (\defined("static::$propertyName")) {
+            return new \ReflectionClassConstant(static::class, $propertyName);
         }
 
-        if (defined("static::$propertyName")) {
-            return new \ReflectionClassConstant(static::class, $propertyName);
+        if (property_exists(static::class, $propertyName)) {
+            return new \ReflectionProperty(static::class, $propertyName);
         }
 
         throw new RepositoryMethodNotFoundException();
@@ -94,7 +94,7 @@ abstract class AbstractRepository
 
     /**
      * @param string $propertyName
-     * @param array $data
+     * @param array $params
      * @param object|null $object
      *
      * @return DbResult
@@ -112,19 +112,19 @@ abstract class AbstractRepository
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
-    public static function invoke(string $propertyName, array $data, object $object = null) : DbResultInterface
+    public static function invoke(string $propertyName, array $params, object $object = null) : DbResultInterface
     {
-        if (!$data && empty($data[0])) {
+        if ($params && empty($params[0])) {
             throw new RepositoryMethodArgsInvalidException();
         }
 
-        if (\is_array($data[0]) && !ArrayHelper::isAccos($data[0])) {
+        if (\is_array($params[0]) && !ArrayHelper::isAccos($params[0])) {
             throw new RepositoryMethodArgsInvalidException();
         }
 
-        $data = $data[0];
-        if($data instanceof DTO) {
-            $data = $data->toSnakeArray();
+        $params && $params = $params[0];
+        if($params instanceof DTO) {
+            $params = $params->toSnakeArray();
         }
 
         $reflector = static::getReflector($propertyName);
@@ -140,7 +140,7 @@ abstract class AbstractRepository
         /** @var App $app */
         $app = get_static_container(App::class);
         /** @var DataInterface $data */
-        $data = get_required_container(DataInterface::class, [$sql, $data]);
+        $data = get_required_container(DataInterface::class, [$sql, $params]);
         $data->setDbConnect($app::getDB($dbName));
         $data->setPrefix(static::getPrefix($docBlock));
 
@@ -153,7 +153,6 @@ abstract class AbstractRepository
      *
      * @return DbResult
      *
-     * @throws Exceptions\CacheException
      * @throws Exceptions\DatabaseException
      * @throws RepositoryException
      * @throws RepositoryMethodNotFoundException
@@ -178,7 +177,6 @@ abstract class AbstractRepository
      *
      * @return DbResult
      *
-     * @throws Exceptions\CacheException
      * @throws Exceptions\DatabaseException
      * @throws RepositoryException
      * @throws RepositoryMethodNotFoundException

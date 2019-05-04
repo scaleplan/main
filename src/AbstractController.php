@@ -10,6 +10,7 @@ use Scaleplan\Helpers\NameConverter;
 use Scaleplan\Http\CurrentRequest;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
+use Scaleplan\Main\Exceptions\ControllerException;
 use Scaleplan\Result\HTMLResult;
 use Scaleplan\Result\Interfaces\DbResultInterface;
 use Scaleplan\Result\Interfaces\ResultInterface;
@@ -112,19 +113,33 @@ abstract class AbstractController extends AccessControllerParent
     /**
      * Вернуть связанный с контроллером репозиторий
      *
-     * @return AbstractRepository|null
+     * @return AbstractRepository
+     *
+     * @throws ControllerException
      */
-    public function getRepository() : ?AbstractRepository
+    public function getRepository() : AbstractRepository
     {
-        return class_exists($this->repositoryName) ? new $this->repositoryName : null;
+        if (!class_exists($this->repositoryName)) {
+            throw new ControllerException('Репозиторий не найден.');
+        }
+
+        return new $this->repositoryName;
     }
 
     /**
-     * @return AbstractService|null
+     * Вернуть связанный с контроллером сервис
+     *
+     * @return AbstractService
+     *
+     * @throws ControllerException
      */
-    public function getService() : ?AbstractService
+    public function getService() : AbstractService
     {
-        return class_exists($this->serviceName) ? new $this->serviceName : null;
+        if (!class_exists($this->serviceName)) {
+            throw new ControllerException('Сервис не найден.');
+        }
+
+        return new $this->serviceName;
     }
 
     /**
