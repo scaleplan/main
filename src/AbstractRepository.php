@@ -24,8 +24,12 @@ use Scaleplan\Result\Interfaces\DbResultInterface;
  */
 abstract class AbstractRepository
 {
-    public const TABLE = null;
+    public const TABLE                  = null;
     public const DEFAULT_SORT_DIRECTION = 'DESC';
+
+    public const DB_NAME_TAG   = 'dbName';
+    public const PREFIX_TAG    = 'prefix';
+    public const MODIFYING_TAG = 'modifying';
 
     /**
      * Вернуть имя базы данных в зависимости от субдомена
@@ -38,7 +42,7 @@ abstract class AbstractRepository
      */
     public static function getDbName(DocBlock $docBlock) : string
     {
-        $docParam = $docBlock->getTagsByName('dbName')[0] ?? null;
+        $docParam = $docBlock->getTagsByName(static::DB_NAME_TAG)[0] ?? null;
         if (!$docParam) {
             return get_required_env(ConfigConstants::DEFAULT_DB);
         }
@@ -63,12 +67,22 @@ abstract class AbstractRepository
      */
     public static function getPrefix(DocBlock $docBlock) : string
     {
-        $docParam = $docBlock->getTagsByName('prefix')[0] ?? null;
+        $docParam = $docBlock->getTagsByName(static::PREFIX_TAG)[0] ?? null;
         if (!$docParam) {
             return '';
         }
 
         return trim($docParam->getDescription());
+    }
+
+    /**
+     * @param DocBlock $docBlock
+     *
+     * @return bool
+     */
+    public static function isModifying(DocBlock $docBlock) : bool
+    {
+        return (bool)$docBlock->getTagsByName(static::MODIFYING_TAG);
     }
 
     /**
@@ -123,7 +137,7 @@ abstract class AbstractRepository
         }
 
         $params && $params = $params[0];
-        if($params instanceof DTO) {
+        if ($params instanceof DTO) {
             $params = $params->toSnakeArray();
         }
 
@@ -135,14 +149,16 @@ abstract class AbstractRepository
         }
 
         $docBlock = new DocBlock($reflector->getDocComment());
-        $dbName = static::getDbName($docBlock);
 
         /** @var App $app */
         $app = get_static_container(App::class);
         /** @var DataInterface $data */
         $data = get_required_container(DataInterface::class, [$sql, $params]);
-        $data->setDbConnect($app::getDB($dbName));
+        $data->setDbConnect($app::getDB(static::getDbName($docBlock)));
         $data->setPrefix(static::getPrefix($docBlock));
+        if (static::isModifying($docBlock)) {
+            $data->setIsModifying();
+        }
 
         return $data->getValue();
     }
