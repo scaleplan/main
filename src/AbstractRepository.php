@@ -21,6 +21,13 @@ use Scaleplan\Result\Interfaces\DbResultInterface;
  * Class AbstractRepository
  *
  * @package Scaleplan\Main
+ *
+ * @method DbResultInterface getFullInfo(array|DTO $data)
+ * @method DbResultInterface put(array|DTO $data)
+ * @method DbResultInterface update(DTO $id, array|DTO $data)
+ * @method DbResultInterface delete(DTO $id)
+ * @method DbResultInterface getInfo(DTO $id)
+ * @method DbResultInterface getList(array|DTO $data)
  */
 abstract class AbstractRepository
 {
@@ -132,7 +139,7 @@ abstract class AbstractRepository
             throw new RepositoryMethodArgsInvalidException();
         }
 
-        if (\is_array($params[0]) && !ArrayHelper::isAccos($params[0])) {
+        if ($params && \is_array($params[0]) && !ArrayHelper::isAccos($params[0])) {
             throw new RepositoryMethodArgsInvalidException();
         }
 

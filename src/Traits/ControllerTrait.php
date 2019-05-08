@@ -79,7 +79,7 @@ trait ControllerTrait
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Exception
      */
-    protected function actionCreate(FormInterface $form = null) : HTMLResultInterface
+    public function actionCreate(FormInterface $form = null) : HTMLResultInterface
     {
         $form = $form ?? $this->getForm();
         return get_required_container(HTMLResultInterface::class, [$form->render()]);
@@ -107,7 +107,7 @@ trait ControllerTrait
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Exception
      */
-    protected function actionEdit(int $id, FormInterface $form = null) : HTMLResultInterface
+    public function actionEdit(int $id, FormInterface $form = null) : HTMLResultInterface
     {
         /** @var AbstractController $this */
         $repo = $this->getRepository();
@@ -135,7 +135,7 @@ trait ControllerTrait
      *
      * @throws ControllerException
      */
-    protected function actionPut(DTO $dto) : DbResultInterface
+    public function actionPut(DTO $dto) : DbResultInterface
     {
         try {
             /** @var AbstractController $this */
@@ -162,14 +162,14 @@ trait ControllerTrait
      *
      * @accessFilter id
      *
-     * @param int $id
+     * @param DTO $id
      * @param DTO $dto
      *
      * @return DbResultInterface
      *
      * @throws ControllerException
      */
-    protected function actionUpdate(int $id, DTO $dto) : DbResultInterface
+    public function actionUpdate(DTO $id, DTO $dto) : DbResultInterface
     {
         /** @var AbstractController $this */
         $repo = $this->getRepository();
@@ -190,21 +190,17 @@ trait ControllerTrait
      *
      * @accessFilter id
      *
-     * @param int $id - идентификатор модели
+     * @param DTO $id - идентификатор модели
      *
      * @return DbResultInterface
      *
      * @throws ControllerException
      */
-    protected function actionDelete(int $id) : DbResultInterface
+    public function actionDelete(DTO $id) : DbResultInterface
     {
         /** @var AbstractController $this */
         $repo = $this->getRepository();
-        if (!$repo) {
-            throw new ControllerException('Репозиторий не найден.');
-        }
-
-        $result = $repo->delete(['id' => $id]);
+        $result = $repo->delete($id);
         if (!$result->getResult()) {
             throw new ControllerException('Не удалось удалить объект.');
         }
@@ -217,7 +213,7 @@ trait ControllerTrait
      *
      * @accessFilter id
      *
-     * @param int $id - идентификатор модели
+     * @param DTO $id - идентификатор модели
      *
      * @return ResultInterface
      *
@@ -231,7 +227,7 @@ trait ControllerTrait
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
      * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
      */
-    protected function actionInfo(int $id) : ResultInterface
+    public function actionInfo(DTO $id) : ResultInterface
     {
         /** @var AbstractController $this */
         $repo = $this->getRepository();
@@ -239,7 +235,7 @@ trait ControllerTrait
             throw new ControllerException('Репозиторий не найден.');
         }
 
-        $result = $repo->getInfo(['id' => $id]);
+        $result = $repo->getInfo($id);
         if (!$result->getResult()) {
             throw new ControllerException('Не удалось удалить объект');
         }
@@ -267,7 +263,7 @@ trait ControllerTrait
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
      * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
      */
-    protected function actionFullInfo(int $id) : ResultInterface
+    public function actionFullInfo(int $id) : ResultInterface
     {
         /** @var AbstractController $this */
         $repo = $this->getRepository();
@@ -300,7 +296,7 @@ trait ControllerTrait
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
      * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
      */
-    protected function actionList(DTO $dto) : ResultInterface
+    public function actionList(DTO $dto) : ResultInterface
     {
         /** @var AbstractController $this */
         $repo = $this->getRepository();

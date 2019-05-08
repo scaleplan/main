@@ -3,7 +3,6 @@
 namespace Scaleplan\Main;
 
 use App\Classes\App;
-use Scaleplan\Access\AccessControllerParent;
 use function Scaleplan\DependencyInjection\get_required_container;
 use function Scaleplan\Helpers\get_required_env;
 use Scaleplan\Helpers\NameConverter;
@@ -20,7 +19,7 @@ use Scaleplan\Result\Interfaces\ResultInterface;
  *
  * @package Scaleplan\Main
  */
-abstract class AbstractController extends AccessControllerParent
+abstract class AbstractController
 {
     public const FORMS_PATH_ENV_NAME = 'FORM_PATH';
 
