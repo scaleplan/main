@@ -156,6 +156,8 @@ class App
             : date_default_timezone_get();
         static::$timeZone = new \DateTimeZone($timeZoneName);
         static::$locale = locale_accept_from_http($_SERVER['HTTP_ACCEPT_LANGUAGE']) ?: get_required_env('DEFAULT_LANG');
+        setlocale(LC_ALL , static::$locale);
+        date_default_timezone_set(static::$timeZone->getName());
     }
 
     /**
