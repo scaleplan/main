@@ -9,6 +9,7 @@ use Scaleplan\Form\Form;
 use Scaleplan\Form\Interfaces\FormInterface;
 use function Scaleplan\Helpers\get_required_env;
 use Scaleplan\Http\Exceptions\NotFoundException;
+use Scaleplan\HttpStatus\HttpStatusCodes;
 use Scaleplan\Main\AbstractController;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Exceptions\ControllerException;
@@ -107,16 +108,19 @@ trait ControllerTrait
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Exception
      */
-    public function actionEdit(int $id, FormInterface $form = null) : HTMLResultInterface
+    public function actionEdit(DTO $id, FormInterface $form = null) : HTMLResultInterface
     {
         /** @var AbstractController $this */
         $repo = $this->getRepository();
         if (!$repo) {
             throw new ControllerException('Репозиторий не найден.');
         }
-        $result = $repo->getFullInfo(['id' => $id]);
+        $result = $repo->getFullInfo($id);
         if (!$result->getResult()) {
-            throw new NotFoundException('Объект с таким идентификатором не существует.', 404);
+            throw new NotFoundException(
+                'Объект с таким идентификатором не существует.',
+                HttpStatusCodes::HTTP_NOT_FOUND
+            );
         }
 
         $form = $form ?? $this->getForm('update');
@@ -148,7 +152,7 @@ trait ControllerTrait
             }
         } catch (\PDOException $e) {
             if ($e->getCode() === Db::DUPLICATE_ERROR_CODE) {
-                throw new ControllerException('Такая сущность уже есть в системе.');
+                throw new ControllerException('Такая сущность уже есть в системе.', HttpStatusCodes::HTTP_CONFLICT);
             }
 
             throw $e;
@@ -179,7 +183,10 @@ trait ControllerTrait
 
         $result = $repo->update($id, $dto);
         if (!$result->getResult()) {
-            throw new ControllerException('Не удалось изменить объект.');
+            throw new ControllerException(
+                'Не удалось изменить объект. Возможно, объект не существует.',
+                HttpStatusCodes::HTTP_NOT_FOUND
+            );
         }
 
         return $result;
@@ -202,7 +209,7 @@ trait ControllerTrait
         $repo = $this->getRepository();
         $result = $repo->delete($id);
         if (!$result->getResult()) {
-            throw new ControllerException('Не удалось удалить объект.');
+            throw new ControllerException('Не удалось удалить объект.', HttpStatusCodes::HTTP_NOT_FOUND);
         }
 
         return $result;
@@ -237,7 +244,10 @@ trait ControllerTrait
 
         $result = $repo->getInfo($id);
         if (!$result->getResult()) {
-            throw new ControllerException('Не удалось удалить объект');
+            throw new ControllerException(
+                'Объект с таким идентификатором не существует.',
+                HttpStatusCodes::HTTP_NOT_FOUND
+            );
         }
         /** @var AbstractController $this */
         return $this->formatResponse($result);
@@ -263,7 +273,7 @@ trait ControllerTrait
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
      * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
      */
-    public function actionFullInfo(int $id) : ResultInterface
+    public function actionFullInfo(DTO $id) : ResultInterface
     {
         /** @var AbstractController $this */
         $repo = $this->getRepository();
@@ -271,9 +281,12 @@ trait ControllerTrait
             throw new ControllerException('Репозиторий не найден.');
         }
 
-        $result = $repo->getFullInfo(['id' => $id]);
+        $result = $repo->getFullInfo($id);
         if (!$result->getResult()) {
-            throw new NotFoundException('Объект с таким идентификатором не существует.', 404);
+            throw new NotFoundException(
+                'Объект с таким идентификатором не существует.',
+                HttpStatusCodes::HTTP_NOT_FOUND
+            );
         }
         /** @var AbstractController $this */
         return $this->formatResponse($result);
@@ -306,7 +319,10 @@ trait ControllerTrait
 
         $result = $repo->getList($dto);
         if (!$result->getResult()) {
-            throw new NotFoundException('Объект с таким идентификатором не существует.', 404);
+            throw new NotFoundException(
+                'Объект с таким идентификатором не существует.',
+                HttpStatusCodes::HTTP_NOT_FOUND
+            );
         }
         /** @var AbstractController $this */
         return $this->formatResponse($result);

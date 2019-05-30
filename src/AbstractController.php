@@ -188,7 +188,7 @@ abstract class AbstractController
         );
 
         return
-            '/' . NameConverter::camelCaseToSnakeCase($model)
-            . '/' . NameConverter::camelCaseToSnakeCase($methodName);
+            '/' . NameConverter::camelCaseToKebabCase($model)
+            . '/' . NameConverter::camelCaseToKebabCase($methodName);
     }
 }

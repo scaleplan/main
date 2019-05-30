@@ -19,40 +19,61 @@ use Scaleplan\Result\Interfaces\DbResultInterface;
  */
 trait RepositoryTrait
 {
+    /**
+     * @dbName $current
+     */
     public $getInfo =
         'SELECT *'
-      .' FROM ' . self::TABLE
-      .' WHERE id = :id';
+        . ' FROM ' . self::TABLE
+        . ' WHERE id = :id';
 
+    /**
+     * @dbName $current
+     */
     public $getList =
         'SELECT id, name'
-      .' FROM ' . self::TABLE
-      .' LIMIT :limit ' . self::DEFAULT_SORT_DIRECTION
-      .' OFFSET :offset';
+        . ' FROM ' . self::TABLE
+        . ' [LIMIT :limit ' . self::DEFAULT_SORT_DIRECTION
+        . '] [OFFSET :offset]';
 
+    /**
+     * @dbName $current
+     */
     public $put =
         'INSERT INTO ' . self::TABLE
-      .'   ([fields])'
-      .' VALUES [expression]'
-      .' RETURNING *';
+        . '   ([fields])'
+        . ' VALUES [expression]'
+        . ' RETURNING *';
 
+    /**
+     * @dbName $current
+     */
     public $update =
         'UPDATE ' . self::TABLE
-      .' SET [expression:not(id)]'
-      .' WHERE id = :id'
-      .' RETURNING *';
+        . ' SET [expression:not(id)]'
+        . ' WHERE id = :id'
+        . ' RETURNING *';
 
+    /**
+     * @dbName $current
+     */
     public $delete =
         'DELETE FROM ' . self::TABLE
-      .' WHERE id = :id';
+        . ' WHERE id = :id';
 
+    /**
+     * @dbName $current
+     */
     public $activate =
         'UPDATE ' . self::TABLE
-      .' SET is_active = true'
-      .' WHERE id = :id';
+        . ' SET is_active = true'
+        . ' WHERE id = :id';
 
+    /**
+     * @dbName $current
+     */
     public $deactivate =
         'UPDATE ' . self::TABLE
-        .' SET is_active = false'
-        .' WHERE id = :id';
+        . ' SET is_active = false'
+        . ' WHERE id = :id';
 }
