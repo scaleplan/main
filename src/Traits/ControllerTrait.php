@@ -295,7 +295,7 @@ trait ControllerTrait
     /**
      * Список моделей
      *
-     * @param DTO $dto
+     * @param DTO|array $dto
      *
      * @return ResultInterface
      * @throws ControllerException
@@ -309,7 +309,7 @@ trait ControllerTrait
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
      * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
      */
-    public function actionList(DTO $dto) : ResultInterface
+    public function actionList($dto) : ResultInterface
     {
         /** @var AbstractController $this */
         $repo = $this->getRepository();

@@ -30,7 +30,7 @@ class View implements ViewInterface
      *
      * @var string
      */
-    protected $filePath = '';
+    protected $filePath;
 
     /**
      * Шапка
@@ -43,6 +43,11 @@ class View implements ViewInterface
      * @var string|null
      */
     protected $footerPath;
+
+    /**
+     * @var string|null
+     */
+    protected $sideMenuPath;
 
     /**
      * Настройки шаблона
@@ -71,6 +76,7 @@ class View implements ViewInterface
      * @param string $filePath - путь к файлу шаблона
      * @param string|null $headerPath - шапка
      * @param string|null $footerPath - подвал
+     * @param string|null $sideMenuPath - боковое меню
      * @param array $settings - настройки шаблонизатора
      *
      * @throws \ReflectionException
@@ -83,6 +89,7 @@ class View implements ViewInterface
         ?string $filePath,
         string $headerPath = null,
         string $footerPath = null,
+        string $sideMenuPath = null,
         array $settings = []
     )
     {
@@ -91,11 +98,60 @@ class View implements ViewInterface
         $currentRequest = get_required_container(CurrentRequestInterface::class);
         $this->headerPath = $headerPath;
         $this->footerPath = $footerPath;
+        $this->sideMenuPath = $sideMenuPath;
         /** @var Access $access */
         $access = get_required_container(Access::class);
         $this->settings['forbiddenSelectors']
             = $this->settings['forbiddenSelectors'] ?? $access->getForbiddenSelectors($currentRequest->getURL());
         $this->settings = $settings;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getHeaderPath() : ?string
+    {
+        return $this->headerPath;
+    }
+
+    /**
+     * @param string|null $headerPath
+     */
+    public function setHeaderPath(?string $headerPath) : void
+    {
+        $this->headerPath = $headerPath;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getFooterPath() : ?string
+    {
+        return $this->footerPath;
+    }
+
+    /**
+     * @param string|null $footerPath
+     */
+    public function setFooterPath(?string $footerPath) : void
+    {
+        $this->footerPath = $footerPath;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getSideMenuPath() : ?string
+    {
+        return $this->sideMenuPath;
+    }
+
+    /**
+     * @param string|null $sideMenuPath
+     */
+    public function setSideMenuPath(?string $sideMenuPath) : void
+    {
+        $this->sideMenuPath = $sideMenuPath;
     }
 
     /**
@@ -159,6 +215,7 @@ class View implements ViewInterface
 
     /**
      * @return \phpQueryObject
+     *
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
     public function getHeader() : \phpQueryObject
@@ -168,11 +225,22 @@ class View implements ViewInterface
 
     /**
      * @return \phpQueryObject
+     *
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
     public function getFooter() : \phpQueryObject
     {
         return phpQuery::newDocumentFileHTML(static::getFullFilePath($this->footerPath));
+    }
+
+    /**
+     * @return \phpQueryObject
+     *
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     */
+    public function getSideMenu() : \phpQueryObject
+    {
+        return phpQuery::newDocumentFileHTML(static::getFullFilePath($this->sideMenuPath));
     }
 
     /**
@@ -191,6 +259,7 @@ class View implements ViewInterface
         $page->renderIncludes();
         $template = $page->getTemplate();
         $body = $template->find('body');
+        $body->prepend($this->getSideMenu());
         $body->prepend($this->getHeader());
         $body->append($this->getFooter());
 

@@ -249,7 +249,7 @@ class ControllerExecutor implements ControllerExecutorInterface
 
             return $this->response;
         } catch (\Throwable $e) {
-            //$this->response->buildError($e);
+            $this->response->buildError($e);
             throw $e;
         }
     }
