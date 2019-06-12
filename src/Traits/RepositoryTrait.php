@@ -2,6 +2,7 @@
 
 namespace Scaleplan\Main\Traits;
 
+use Scaleplan\DTO\DTO;
 use Scaleplan\Result\Interfaces\DbResultInterface;
 
 /**
@@ -9,13 +10,13 @@ use Scaleplan\Result\Interfaces\DbResultInterface;
  *
  * @package Scaleplan\Main\Traits
  *
- * @method DbResultInterface getInfo(array $data)
- * @method DbResultInterface getList(array $data)
- * @method DbResultInterface put(array $data)
- * @method DbResultInterface update(array $data)
- * @method DbResultInterface delete(array $data)
- * @method DbResultInterface activate(array $data)
- * @method DbResultInterface deactivate(array $data)
+ * @method DbResultInterface getInfo(array|DTO $data)
+ * @method DbResultInterface getList(array|DTO $data)
+ * @method DbResultInterface put(array|DTO $data)
+ * @method DbResultInterface update(array|DTO $data)
+ * @method DbResultInterface delete(array|DTO $data)
+ * @method DbResultInterface activate(array|DTO $data)
+ * @method DbResultInterface deactivate(array|DTO $data)
  */
 trait RepositoryTrait
 {
