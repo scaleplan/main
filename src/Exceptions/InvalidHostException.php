@@ -10,4 +10,5 @@ namespace Scaleplan\Main\Exceptions;
 class InvalidHostException extends AbstractException
 {
     public const MESSAGE = 'Invalid host.';
+    public const CODE = 400;
 }

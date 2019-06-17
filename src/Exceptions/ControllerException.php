@@ -10,4 +10,5 @@ namespace Scaleplan\Main\Exceptions;
 class ControllerException extends AbstractException
 {
     public const MESSAGE = 'Controller error.';
+    public const CODE = 400;
 }

@@ -136,11 +136,11 @@ abstract class AbstractRepository
     public static function invoke(string $propertyName, array $params, object $object = null) : DbResultInterface
     {
         if ($params && empty($params[0])) {
-            throw new RepositoryMethodArgsInvalidException();
+            throw new RepositoryMethodArgsInvalidException($propertyName);
         }
 
         if ($params && \is_array($params[0]) && !ArrayHelper::isAccos($params[0])) {
-            throw new RepositoryMethodArgsInvalidException();
+            throw new RepositoryMethodArgsInvalidException($propertyName);
         }
 
         $params && $params = $params[0];
