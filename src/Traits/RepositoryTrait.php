@@ -34,8 +34,8 @@ trait RepositoryTrait
     public $getList =
         'SELECT id, name'
         . ' FROM ' . self::TABLE
-        . '[LIMIT :limit]'
-        . '[OFFSET :offset]';
+        . ' [LIMIT :limit]'
+        . ' [OFFSET :offset]';
 
     /**
      * @dbName $current
