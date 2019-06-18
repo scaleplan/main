@@ -89,9 +89,7 @@ trait ControllerTrait
     /**
      * Форма редактирования модели
      *
-     * @accessFilter id
-     *
-     * @param int $id - идентификатор модели
+     * @param DTO $id - идентификатор модели
      * @param FormInterface|null $form
      *
      * @return HTMLResultInterface
@@ -164,8 +162,6 @@ trait ControllerTrait
     /**
      * Изменить модель
      *
-     * @accessFilter id
-     *
      * @param DTO $id
      * @param DTO $dto
      *
@@ -181,7 +177,7 @@ trait ControllerTrait
             throw new ControllerException('Репозиторий не найден.');
         }
 
-        $result = $repo->update($id, $dto);
+        $result = $repo->update($id->toSnakeArray() + $dto->toSnakeArray());
         if (!$result->getResult()) {
             throw new ControllerException(
                 'Не удалось изменить объект. Возможно, объект не существует.',
@@ -194,8 +190,6 @@ trait ControllerTrait
 
     /**
      * Удаление модели
-     *
-     * @accessFilter id
      *
      * @param DTO $id - идентификатор модели
      *
@@ -217,8 +211,6 @@ trait ControllerTrait
 
     /**
      * Сжатая информация о модели
-     *
-     * @accessFilter id
      *
      * @param DTO $id - идентификатор модели
      *
@@ -256,9 +248,7 @@ trait ControllerTrait
     /**
      * Полная информация о модели
      *
-     * @accessFilter id
-     *
-     * @param int $id - идентификатор модели
+     * @param DTO $id - идентификатор модели
      *
      * @return ResultInterface
      *
@@ -293,21 +283,13 @@ trait ControllerTrait
     }
 
     /**
-     * Список моделей
+     * Список объектов
      *
      * @param DTO|array $dto
      *
      * @return ResultInterface
+     *
      * @throws ControllerException
-     * @throws NotFoundException
-     * @throws \ReflectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
-     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
-     * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
-     * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
      */
     public function actionList($dto) : ResultInterface
     {
@@ -318,13 +300,7 @@ trait ControllerTrait
         }
 
         $result = $repo->getList($dto);
-        if (!$result->getResult()) {
-            throw new NotFoundException(
-                'Объект с таким идентификатором не существует.',
-                HttpStatusCodes::HTTP_NOT_FOUND
-            );
-        }
-        /** @var AbstractController $this */
+
         return $this->formatResponse($result);
     }
 }
