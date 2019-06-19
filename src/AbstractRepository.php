@@ -37,6 +37,7 @@ abstract class AbstractRepository
     public const DB_NAME_TAG   = 'dbName';
     public const PREFIX_TAG    = 'prefix';
     public const MODIFYING_TAG = 'modifying';
+    public const MODEL_TAG     = 'model';
 
     /**
      * Вернуть имя базы данных в зависимости от субдомена
@@ -70,13 +71,13 @@ abstract class AbstractRepository
      *
      * @param null|DocBlock $docBlock - блок описания префикса
      *
-     * @return string
+     * @return string|null
      */
-    public static function getPrefix(DocBlock $docBlock) : string
+    public static function getPrefix(DocBlock $docBlock) : ?string
     {
         $docParam = $docBlock->getTagsByName(static::PREFIX_TAG)[0] ?? null;
         if (!$docParam) {
-            return '';
+            return null;
         }
 
         return trim($docParam->getDescription());
@@ -90,6 +91,21 @@ abstract class AbstractRepository
     public static function isModifying(DocBlock $docBlock) : bool
     {
         return (bool)$docBlock->getTagsByName(static::MODIFYING_TAG);
+    }
+
+    /**
+     * @param DocBlock $docBlock
+     *
+     * @return string|null
+     */
+    public static function getModelClass(DocBlock $docBlock) : ?string
+    {
+        $docParam = $docBlock->getTagsByName(static::MODEL_TAG)[0] ?? null;
+        if (!$docParam) {
+            return null;
+        }
+
+        return trim($docParam->getDescription());
     }
 
     /**
@@ -167,7 +183,10 @@ abstract class AbstractRepository
             $data->setIsModifying();
         }
 
-        return $data->getValue();
+        $result = $data->getValue();
+        $result->setModelClass(static::getModelClass($docBlock));
+
+        return $result;
     }
 
     /**

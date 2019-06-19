@@ -23,7 +23,7 @@ trait RepositoryTrait
     /**
      * @dbName $current
      */
-    public $getInfo =
+    public static $getInfo =
         'SELECT *'
         . ' FROM ' . self::TABLE
         . ' WHERE id = :id';
@@ -31,7 +31,7 @@ trait RepositoryTrait
     /**
      * @dbName $current
      */
-    public $getList =
+    public static $getList =
         'SELECT id, name'
         . ' FROM ' . self::TABLE
         . ' [LIMIT :limit]'
@@ -40,7 +40,7 @@ trait RepositoryTrait
     /**
      * @dbName $current
      */
-    public $put =
+    public static $put =
         'INSERT INTO ' . self::TABLE
         . '   ([fields])'
         . ' VALUES [expression]'
@@ -49,7 +49,7 @@ trait RepositoryTrait
     /**
      * @dbName $current
      */
-    public $update =
+    public static $update =
         'UPDATE ' . self::TABLE
         . ' SET [expression:not(id)]'
         . ' WHERE id = :id'
@@ -58,14 +58,14 @@ trait RepositoryTrait
     /**
      * @dbName $current
      */
-    public $delete =
+    public static $delete =
         'DELETE FROM ' . self::TABLE
         . ' WHERE id = :id';
 
     /**
      * @dbName $current
      */
-    public $activate =
+    public static $activate =
         'UPDATE ' . self::TABLE
         . ' SET is_active = true'
         . ' WHERE id = :id';
@@ -73,7 +73,7 @@ trait RepositoryTrait
     /**
      * @dbName $current
      */
-    public $deactivate =
+    public static $deactivate =
         'UPDATE ' . self::TABLE
         . ' SET is_active = false'
         . ' WHERE id = :id';
