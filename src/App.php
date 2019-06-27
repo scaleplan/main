@@ -303,7 +303,9 @@ class App
                 . '.html';
         }
 
-        if (!file_exists($path)) {
+        if (!file_exists(get_required_env(ConfigConstants::BUNDLE_PATH)
+            . get_required_env(ConfigConstants::VIEWS_PATH)
+            . $path)) {
             $path = get_required_env(ConfigConstants::PUBLIC_TEMPLATES_PATH)
                 . '/' . static::getLocale()
                 . $url
