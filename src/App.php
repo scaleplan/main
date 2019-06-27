@@ -297,7 +297,14 @@ class App
             ? (include (get_required_env(ConfigConstants::BUNDLE_PATH) . getenv('VIEWS_CONFIG')))[$url] ?? null
             : null;
         if (!$path) {
-            $path = get_required_env(ConfigConstants::TEMPLATES_PATH)
+            $path = get_required_env(ConfigConstants::PRIVATE_TEMPLATES_PATH)
+                . '/' . static::getLocale()
+                . $url
+                . '.html';
+        }
+
+        if (!file_exists($path)) {
+            $path = get_required_env(ConfigConstants::PUBLIC_TEMPLATES_PATH)
                 . '/' . static::getLocale()
                 . $url
                 . '.html';

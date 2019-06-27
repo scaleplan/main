@@ -21,5 +21,6 @@ interface ConfigConstants
     public const VIEWS_PATH                = 'VIEWS_PATH';
     public const BUNDLE_PATH               = 'BUNDLE_PATH';
     public const CONTROLLERS_METHOD_PREFIX = 'CONTROLLERS_METHOD_PREFIX';
-    public const TEMPLATES_PATH            = 'TEMPLATES_PATH';
+    public const PRIVATE_TEMPLATES_PATH    = 'PRIVATE_TEMPLATES_PATH';
+    public const PUBLIC_TEMPLATES_PATH     = 'PUBLIC_TEMPLATES_PATH';
 }
