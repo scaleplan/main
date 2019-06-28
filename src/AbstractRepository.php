@@ -27,6 +27,7 @@ use Scaleplan\Result\Interfaces\DbResultInterface;
  * @method DbResultInterface delete(DTO $id)
  * @method DbResultInterface getInfo(DTO $id)
  * @method DbResultInterface getList(array|DTO $data)
+ * @method DbResultInterface deactivate(array|DTO $data)
  */
 abstract class AbstractRepository
 {

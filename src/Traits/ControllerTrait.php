@@ -5,6 +5,7 @@ namespace Scaleplan\Main\Traits;
 use Scaleplan\Db\Db;
 use function Scaleplan\DependencyInjection\get_required_container;
 use Scaleplan\DTO\DTO;
+use Scaleplan\DTO\Exceptions\PropertyNotFoundException;
 use Scaleplan\Form\Form;
 use Scaleplan\Form\Interfaces\FormInterface;
 use function Scaleplan\Helpers\get_required_env;
@@ -90,6 +91,7 @@ trait ControllerTrait
      * Форма редактирования модели
      *
      * @param DTO $id - идентификатор модели
+     * @param DbResultInterface|null $model - Данные для заполнения формы
      * @param FormInterface|null $form
      *
      * @return HTMLResultInterface
@@ -106,15 +108,19 @@ trait ControllerTrait
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Exception
      */
-    public function actionEdit(DTO $id, FormInterface $form = null) : HTMLResultInterface
+    public function actionEdit(
+        DTO $dto,
+        DbResultInterface $model = null,
+        FormInterface $form = null
+    ) : HTMLResultInterface
     {
         /** @var AbstractController $this */
         $repo = $this->getRepository();
         if (!$repo) {
             throw new ControllerException('Репозиторий не найден.');
         }
-        $result = $repo->getFullInfo($id);
-        if (!$result->getResult()) {
+        $model = $model ?? $repo->getFullInfo($dto);
+        if (!$model->getResult()) {
             throw new NotFoundException(
                 'Объект с таким идентификатором не существует.',
                 HttpStatusCodes::HTTP_NOT_FOUND
@@ -122,8 +128,12 @@ trait ControllerTrait
         }
 
         $form = $form ?? $this->getForm('update');
-        $form->addIdField($id);
-        $form->setFormValues($result->getFirstResult());
+        if (!isset($dto['id'])) {
+            throw new PropertyNotFoundException('id');
+        }
+
+        $form->addIdField($dto->getId());
+        $form->setFormValues($model->getFirstResult());
 
         return get_required_container(HTMLResultInterface::class, [$form->render()]);
     }
