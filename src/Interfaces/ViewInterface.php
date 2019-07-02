@@ -2,18 +2,45 @@
 
 namespace Scaleplan\Main\Interfaces;
 
-
 use Scaleplan\Result\Interfaces\DbResultInterface;
 
 /**
- * Представление
+ * Interface ViewInterface
  *
- * Class View
- *
- * @package Scaleplan\Main
+ * @package Scaleplan\Main\Interfaces
  */
 interface ViewInterface
 {
+    /**
+     * @return string|null
+     */
+    public function getHeaderPath() : ?string;
+
+    /**
+     * @param string|null $headerPath
+     */
+    public function setHeaderPath(?string $headerPath) : void;
+
+    /**
+     * @return string|null
+     */
+    public function getFooterPath() : ?string;
+
+    /**
+     * @param string|null $footerPath
+     */
+    public function setFooterPath(?string $footerPath) : void;
+
+    /**
+     * @return string|null
+     */
+    public function getSideMenuPath() : ?string;
+
+    /**
+     * @param string|null $sideMenuPath
+     */
+    public function setSideMenuPath(?string $sideMenuPath) : void;
+
     /**
      * Установить является ли представление письмом
      *
@@ -44,16 +71,24 @@ interface ViewInterface
     public function deleteData(string $parentSelector) : void;
 
     /**
+     * @return \phpQueryObject
+     */
+    public function getHeader() : \phpQueryObject;
+
+    /**
+     * @return \phpQueryObject
+     */
+    public function getFooter() : \phpQueryObject;
+
+    /**
+     * @return \phpQueryObject
+     */
+    public function getSideMenu() : \phpQueryObject;
+
+    /**
      * Отрендерить страницу
      *
      * @return \phpQueryObject
      */
     public function render() : \phpQueryObject;
-
-    /**
-     * @param \Throwable $e
-     *
-     * @return \phpQueryObject
-     */
-    public static function renderError(\Throwable $e) : \phpQueryObject;
 }

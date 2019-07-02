@@ -59,7 +59,7 @@ class View implements ViewInterface
     /**
      * Данные для добавления в шаблон
      *
-     * @var array
+     * @var DbResultInterface[]
      */
     protected $data = [];
 
