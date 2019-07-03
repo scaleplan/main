@@ -90,7 +90,7 @@ trait ControllerTrait
     /**
      * Форма редактирования модели
      *
-     * @param DTO $id - идентификатор модели
+     * @param DTO $idDto - идентификатор модели
      * @param DbResultInterface|null $model - Данные для заполнения формы
      * @param FormInterface|null $form
      *
@@ -109,7 +109,7 @@ trait ControllerTrait
      * @throws \Exception
      */
     public function actionEdit(
-        DTO $dto,
+        DTO $idDto,
         DbResultInterface $model = null,
         FormInterface $form = null
     ) : HTMLResultInterface
@@ -119,7 +119,7 @@ trait ControllerTrait
         if (!$repo) {
             throw new ControllerException('Репозиторий не найден.');
         }
-        $model = $model ?? $repo->getFullInfo($dto);
+        $model = $model ?? $repo->getFullInfo($idDto);
         if (!$model->getResult()) {
             throw new NotFoundException(
                 'Объект с таким идентификатором не существует.',
@@ -128,11 +128,11 @@ trait ControllerTrait
         }
 
         $form = $form ?? $this->getForm('update');
-        if (!isset($dto['id'])) {
+        if (!isset($idDto->id)) {
             throw new PropertyNotFoundException('id');
         }
 
-        $form->addIdField($dto->getId());
+        $form->addIdField($idDto->getId());
         $form->setFormValues($model->getFirstResult());
 
         return get_required_container(HTMLResultInterface::class, [$form->render()]);
