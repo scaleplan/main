@@ -2,7 +2,8 @@
 
 namespace Scaleplan\Main;
 
-use phpQuery;
+use PhpQuery\PhpQuery;
+use PhpQuery\PhpQueryObject;
 use Scaleplan\Access\Access;
 use function Scaleplan\DependencyInjection\get_required_container;
 use function Scaleplan\Helpers\get_env;
@@ -214,45 +215,45 @@ class View implements ViewInterface
     }
 
     /**
-     * @return \phpQueryObject
+     * @return PhpQueryObject|null
      *
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
-    public function getHeader() : \phpQueryObject
+    public function getHeader() : ?PhpQueryObject
     {
-        return phpQuery::newDocumentFileHTML(static::getFullFilePath($this->headerPath));
+        return $this->headerPath ? PhpQuery::newDocumentFileHTML(static::getFullFilePath($this->headerPath)) : null;
     }
 
     /**
-     * @return \phpQueryObject
+     * @return PhpQueryObject|null
      *
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
-    public function getFooter() : \phpQueryObject
+    public function getFooter() : ?PhpQueryObject
     {
-        return phpQuery::newDocumentFileHTML(static::getFullFilePath($this->footerPath));
+        return $this->footerPath ? PhpQuery::newDocumentFileHTML(static::getFullFilePath($this->footerPath)) : null;
     }
 
     /**
-     * @return \phpQueryObject
+     * @return PhpQueryObject|null
      *
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
-    public function getSideMenu() : \phpQueryObject
+    public function getSideMenu() : ?PhpQueryObject
     {
-        return phpQuery::newDocumentFileHTML(static::getFullFilePath($this->sideMenuPath));
+        return $this->sideMenuPath ? PhpQuery::newDocumentFileHTML(static::getFullFilePath($this->sideMenuPath)) : null;
     }
 
     /**
      * Отрендерить страницу
      *
-     * @return \phpQueryObject
+     * @return PhpQueryObject
      *
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
      * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
      */
-    public function render() : \phpQueryObject
+    public function render() : PhpQueryObject
     {
         $page = new Templater(static::getFullFilePath($this->filePath), $this->settings);
         $page->removeForbidden();
@@ -273,7 +274,7 @@ class View implements ViewInterface
     /**
      * @param \Throwable $e
      *
-     * @return \phpQueryObject
+     * @return PhpQueryObject
      *
      * @throws \ReflectionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
@@ -283,7 +284,7 @@ class View implements ViewInterface
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Result\Exceptions\ResultException
      */
-    public static function renderError(\Throwable $e) : \phpQueryObject
+    public static function renderError(\Throwable $e) : PhpQueryObject
     {
         $view = new static(get_required_env('ERRORS_PATH')
             . (get_env('ERROR_TEMPLATE_PATH') ?? static::ERROR_TEMPLATE_PATH));

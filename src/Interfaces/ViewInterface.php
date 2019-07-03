@@ -2,6 +2,7 @@
 
 namespace Scaleplan\Main\Interfaces;
 
+use PhpQuery\PhpQueryObject;
 use Scaleplan\Result\Interfaces\DbResultInterface;
 
 /**
@@ -71,24 +72,24 @@ interface ViewInterface
     public function deleteData(string $parentSelector) : void;
 
     /**
-     * @return \phpQueryObject
+     * @return PhpQueryObject|null
      */
-    public function getHeader() : \phpQueryObject;
+    public function getHeader() : ?PhpQueryObject;
 
     /**
-     * @return \phpQueryObject
+     * @return PhpQueryObject|null
      */
-    public function getFooter() : \phpQueryObject;
+    public function getFooter() : ?PhpQueryObject;
 
     /**
-     * @return \phpQueryObject
+     * @return PhpQueryObject|null
      */
-    public function getSideMenu() : \phpQueryObject;
+    public function getSideMenu() : ?PhpQueryObject;
 
     /**
      * Отрендерить страницу
      *
-     * @return \phpQueryObject
+     * @return PhpQueryObject
      */
-    public function render() : \phpQueryObject;
+    public function render() : PhpQueryObject;
 }
