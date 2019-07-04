@@ -187,7 +187,7 @@ trait ControllerTrait
             throw new ControllerException('Репозиторий не найден.');
         }
 
-        $result = $repo->update($id->toSnakeArray() + $dto->toSnakeArray());
+        $result = $repo->update($id->toSnakeArray() + $dto->toFullSnakeArray());
         if (!$result->getResult()) {
             throw new ControllerException(
                 'Не удалось изменить объект. Возможно, объект не существует.',

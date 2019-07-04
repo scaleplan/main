@@ -23,7 +23,7 @@ use Scaleplan\Result\Interfaces\DbResultInterface;
  *
  * @method DbResultInterface getFullInfo(array|DTO $data)
  * @method DbResultInterface put(array|DTO $data)
- * @method DbResultInterface update(DTO $id, array|DTO $data)
+ * @method DbResultInterface update(array|DTO $data)
  * @method DbResultInterface delete(DTO $id)
  * @method DbResultInterface getInfo(DTO $id)
  * @method DbResultInterface getList(array|DTO $data)
