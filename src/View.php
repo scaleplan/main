@@ -218,6 +218,7 @@ class View implements ViewInterface
      * @return PhpQueryObject|null
      *
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Exception
      */
     public function getHeader() : ?PhpQueryObject
     {
@@ -228,6 +229,7 @@ class View implements ViewInterface
      * @return PhpQueryObject|null
      *
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Exception
      */
     public function getFooter() : ?PhpQueryObject
     {
@@ -238,6 +240,7 @@ class View implements ViewInterface
      * @return PhpQueryObject|null
      *
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Exception
      */
     public function getSideMenu() : ?PhpQueryObject
     {
@@ -249,6 +252,7 @@ class View implements ViewInterface
      *
      * @return PhpQueryObject
      *
+     * @throws \PhpQuery\Exceptions\PhpQueryException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
      * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
