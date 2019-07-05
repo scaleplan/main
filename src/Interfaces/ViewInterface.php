@@ -92,4 +92,11 @@ interface ViewInterface
      * @return PhpQueryObject
      */
     public function render() : PhpQueryObject;
+
+    /**
+     * @param \Throwable $e
+     *
+     * @return PhpQueryObject
+     */
+    public static function renderError(\Throwable $e) : PhpQueryObject;
 }
