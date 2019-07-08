@@ -13,36 +13,6 @@ use Scaleplan\Result\Interfaces\DbResultInterface;
 interface ViewInterface
 {
     /**
-     * @return string|null
-     */
-    public function getHeaderPath() : ?string;
-
-    /**
-     * @param string|null $headerPath
-     */
-    public function setHeaderPath(?string $headerPath) : void;
-
-    /**
-     * @return string|null
-     */
-    public function getFooterPath() : ?string;
-
-    /**
-     * @param string|null $footerPath
-     */
-    public function setFooterPath(?string $footerPath) : void;
-
-    /**
-     * @return string|null
-     */
-    public function getSideMenuPath() : ?string;
-
-    /**
-     * @param string|null $sideMenuPath
-     */
-    public function setSideMenuPath(?string $sideMenuPath) : void;
-
-    /**
      * Установить является ли представление письмом
      *
      * @param bool $isMessage - новое значение
@@ -70,21 +40,6 @@ interface ViewInterface
      * @param string $parentSelector - в элемент с каким селектором больше не надо добавлять данные
      */
     public function deleteData(string $parentSelector) : void;
-
-    /**
-     * @return PhpQueryObject|null
-     */
-    public function getHeader() : ?PhpQueryObject;
-
-    /**
-     * @return PhpQueryObject|null
-     */
-    public function getFooter() : ?PhpQueryObject;
-
-    /**
-     * @return PhpQueryObject|null
-     */
-    public function getSideMenu() : ?PhpQueryObject;
 
     /**
      * Отрендерить страницу

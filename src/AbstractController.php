@@ -149,6 +149,7 @@ abstract class AbstractController
      *
      * @return ResultInterface
      *
+     * @throws \PhpQuery\Exceptions\PhpQueryException
      * @throws \ReflectionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
      * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
@@ -156,7 +157,6 @@ abstract class AbstractController
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
-     * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
      */
     protected function formatResponse(DbResultInterface $result, string $parentSelector = 'body') : ResultInterface
     {

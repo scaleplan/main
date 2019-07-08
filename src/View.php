@@ -2,7 +2,6 @@
 
 namespace Scaleplan\Main;
 
-use PhpQuery\PhpQuery;
 use PhpQuery\PhpQueryObject;
 use Scaleplan\Access\Access;
 use function Scaleplan\DependencyInjection\get_required_container;
@@ -34,23 +33,6 @@ class View implements ViewInterface
     protected $filePath;
 
     /**
-     * Шапка
-     *
-     * @var string|null
-     */
-    protected $headerPath;
-
-    /**
-     * @var string|null
-     */
-    protected $footerPath;
-
-    /**
-     * @var string|null
-     */
-    protected $sideMenuPath;
-
-    /**
      * Настройки шаблона
      *
      * @var array
@@ -75,9 +57,6 @@ class View implements ViewInterface
      * View constructor.
      *
      * @param string $filePath - путь к файлу шаблона
-     * @param string|null $headerPath - шапка
-     * @param string|null $footerPath - подвал
-     * @param string|null $sideMenuPath - боковое меню
      * @param array $settings - настройки шаблонизатора
      *
      * @throws \ReflectionException
@@ -88,71 +67,17 @@ class View implements ViewInterface
      */
     public function __construct(
         ?string $filePath,
-        string $headerPath = null,
-        string $footerPath = null,
-        string $sideMenuPath = null,
         array $settings = []
     )
     {
         $this->filePath = $filePath;
         /** @var CurrentRequestInterface $currentRequest */
         $currentRequest = get_required_container(CurrentRequestInterface::class);
-        $this->headerPath = $headerPath;
-        $this->footerPath = $footerPath;
-        $this->sideMenuPath = $sideMenuPath;
         /** @var Access $access */
         $access = get_required_container(Access::class);
         $this->settings['forbiddenSelectors']
             = $this->settings['forbiddenSelectors'] ?? $access->getForbiddenSelectors($currentRequest->getURL());
         $this->settings = $settings;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getHeaderPath() : ?string
-    {
-        return $this->headerPath;
-    }
-
-    /**
-     * @param string|null $headerPath
-     */
-    public function setHeaderPath(?string $headerPath) : void
-    {
-        $this->headerPath = $headerPath;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getFooterPath() : ?string
-    {
-        return $this->footerPath;
-    }
-
-    /**
-     * @param string|null $footerPath
-     */
-    public function setFooterPath(?string $footerPath) : void
-    {
-        $this->footerPath = $footerPath;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getSideMenuPath() : ?string
-    {
-        return $this->sideMenuPath;
-    }
-
-    /**
-     * @param string|null $sideMenuPath
-     */
-    public function setSideMenuPath(?string $sideMenuPath) : void
-    {
-        $this->sideMenuPath = $sideMenuPath;
     }
 
     /**
@@ -215,39 +140,6 @@ class View implements ViewInterface
     }
 
     /**
-     * @return PhpQueryObject|null
-     *
-     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
-     * @throws \Exception
-     */
-    public function getHeader() : ?PhpQueryObject
-    {
-        return $this->headerPath ? PhpQuery::newDocumentFileHTML(static::getFullFilePath($this->headerPath)) : null;
-    }
-
-    /**
-     * @return PhpQueryObject|null
-     *
-     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
-     * @throws \Exception
-     */
-    public function getFooter() : ?PhpQueryObject
-    {
-        return $this->footerPath ? PhpQuery::newDocumentFileHTML(static::getFullFilePath($this->footerPath)) : null;
-    }
-
-    /**
-     * @return PhpQueryObject|null
-     *
-     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
-     * @throws \Exception
-     */
-    public function getSideMenu() : ?PhpQueryObject
-    {
-        return $this->sideMenuPath ? PhpQuery::newDocumentFileHTML(static::getFullFilePath($this->sideMenuPath)) : null;
-    }
-
-    /**
      * Отрендерить страницу
      *
      * @return PhpQueryObject
@@ -255,7 +147,7 @@ class View implements ViewInterface
      * @throws \PhpQuery\Exceptions\PhpQueryException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
-     * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
+     * @throws \Exception
      */
     public function render() : PhpQueryObject
     {
@@ -263,10 +155,6 @@ class View implements ViewInterface
         $page->removeForbidden();
         $page->renderIncludes();
         $template = $page->getTemplate();
-        $body = $template->find('body');
-        $body->prepend($this->getSideMenu());
-        $body->prepend($this->getHeader());
-        $body->append($this->getFooter());
 
         foreach ($this->data as $selector => $data) {
             $page->setMultiData($data->getArrayResult(), $selector);
