@@ -16,13 +16,13 @@ abstract class AbstractException extends \Exception
      * AbstractException constructor.
      *
      * @param string $message
+     * @param string|null $subject
      * @param int $code
      * @param \Throwable|null $previous
-     * @param string|null $subject
      */
     public function __construct(
-        string $subject = null,
         string $message = '',
+        string $subject = null,
         int $code = 0,
         \Throwable $previous = null
     )
