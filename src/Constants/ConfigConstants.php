@@ -2,12 +2,14 @@
 
 namespace Scaleplan\Main\Constants;
 
+use Scaleplan\Main\AbstractConstantClass;
+
 /**
  * Interface ConfigConstants
  *
  * @package Scaleplan\Main\Constants
  */
-interface ConfigConstants
+class ConfigConstants extends AbstractConstantClass
 {
     public const DEFAULT_DB                = 'DEFAULT_DB';
     public const DB_CONFIGS_PATH           = 'DB_CONFIGS_PATH';

@@ -227,6 +227,7 @@ trait ControllerTrait
      * @return ResultInterface
      *
      * @throws ControllerException
+     * @throws \PhpQuery\Exceptions\PhpQueryException
      * @throws \ReflectionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
      * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
@@ -234,7 +235,6 @@ trait ControllerTrait
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
-     * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
      */
     public function actionInfo(DTO $id) : ResultInterface
     {
@@ -264,6 +264,7 @@ trait ControllerTrait
      *
      * @throws ControllerException
      * @throws NotFoundException
+     * @throws \PhpQuery\Exceptions\PhpQueryException
      * @throws \ReflectionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
      * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
@@ -271,7 +272,6 @@ trait ControllerTrait
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
-     * @throws \Scaleplan\Templater\Exceptions\FileNotFountException
      */
     public function actionFullInfo(DTO $id) : ResultInterface
     {
@@ -309,7 +309,7 @@ trait ControllerTrait
             throw new ControllerException('Репозиторий не найден.');
         }
 
-        $result = $repo->getList($dto);
+        $result = $repo->getList($dto->toFullSnakeArray());
 
         return $this->formatResponse($result);
     }

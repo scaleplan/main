@@ -5,16 +5,16 @@ namespace Scaleplan\Main;
 use phpDocumentor\Reflection\DocBlock;
 use Scaleplan\Data\Data;
 use Scaleplan\Data\Interfaces\DataInterface;
-use function Scaleplan\DependencyInjection\get_required_container;
-use function Scaleplan\DependencyInjection\get_static_container;
 use Scaleplan\DTO\DTO;
 use Scaleplan\Helpers\ArrayHelper;
-use function Scaleplan\Helpers\get_required_env;
 use Scaleplan\Helpers\Helper;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Exceptions\RepositoryMethodArgsInvalidException;
 use Scaleplan\Main\Exceptions\RepositoryMethodNotFoundException;
 use Scaleplan\Result\Interfaces\DbResultInterface;
+use function Scaleplan\DependencyInjection\get_required_container;
+use function Scaleplan\DependencyInjection\get_static_container;
+use function Scaleplan\Helpers\get_required_env;
 
 /**
  * Class AbstractRepository
@@ -38,6 +38,7 @@ abstract class AbstractRepository
     public const PREFIX_TAG    = 'prefix';
     public const MODIFYING_TAG = 'modifying';
     public const MODEL_TAG     = 'model';
+    public const CASTINGS_TAG  = 'cast';
 
     public const DB_CACHE_ENV = 'DB_CACHE_ENABLE';
 
@@ -98,6 +99,35 @@ abstract class AbstractRepository
     /**
      * @param DocBlock $docBlock
      *
+     * @return bool|array|null
+     */
+    public static function getCastings(DocBlock $docBlock)
+    {
+        $tags = $docBlock->getTagsByName(static::CASTINGS_TAG);
+        if (!$tags) {
+            return null;
+        }
+
+        $first = reset($tags)->getDescription();
+        if ($first === 'true') {
+            return true;
+        }
+
+        if ($first === 'false') {
+            return false;
+        }
+
+        $castings = [];
+        foreach ($tags as $cast) {
+            $castings[\trim($cast->getName())] = \trim($cast->getDescription());
+        }
+
+        return $castings;
+    }
+
+    /**
+     * @param DocBlock $docBlock
+     *
      * @return string|null
      */
     public static function getModelClass(DocBlock $docBlock) : ?string
@@ -143,10 +173,16 @@ abstract class AbstractRepository
      * @throws RepositoryMethodNotFoundException
      * @throws \ReflectionException
      * @throws \Scaleplan\Data\Exceptions\DataException
+     * @throws \Scaleplan\Data\Exceptions\DbConnectException
+     * @throws \Scaleplan\Data\Exceptions\MemcachedCacheException
+     * @throws \Scaleplan\Data\Exceptions\MemcachedOperationException
+     * @throws \Scaleplan\Data\Exceptions\RedisCacheException
      * @throws \Scaleplan\Data\Exceptions\ValidationException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
+     * @throws \Scaleplan\Db\Exceptions\InvalidIsolationLevelException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      * @throws \Scaleplan\Db\Exceptions\QueryCountNotMatchParamsException
+     * @throws \Scaleplan\Db\Exceptions\QueryExecutionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
      * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
@@ -189,6 +225,10 @@ abstract class AbstractRepository
         }
 
         $data->setCacheEnable((bool)getenv(static::DB_CACHE_ENV));
+        $castings = static::getCastings($docBlock);
+        if (null !== $castings) {
+            $data->setCastings($castings);
+        }
 
         $result = $data->getValue();
         $result->setModelClass(static::getModelClass($docBlock));
@@ -207,10 +247,16 @@ abstract class AbstractRepository
      * @throws RepositoryMethodNotFoundException
      * @throws \ReflectionException
      * @throws \Scaleplan\Data\Exceptions\DataException
+     * @throws \Scaleplan\Data\Exceptions\DbConnectException
+     * @throws \Scaleplan\Data\Exceptions\MemcachedCacheException
+     * @throws \Scaleplan\Data\Exceptions\MemcachedOperationException
+     * @throws \Scaleplan\Data\Exceptions\RedisCacheException
      * @throws \Scaleplan\Data\Exceptions\ValidationException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
+     * @throws \Scaleplan\Db\Exceptions\InvalidIsolationLevelException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      * @throws \Scaleplan\Db\Exceptions\QueryCountNotMatchParamsException
+     * @throws \Scaleplan\Db\Exceptions\QueryExecutionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
      * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
@@ -234,10 +280,16 @@ abstract class AbstractRepository
      * @throws RepositoryMethodNotFoundException
      * @throws \ReflectionException
      * @throws \Scaleplan\Data\Exceptions\DataException
+     * @throws \Scaleplan\Data\Exceptions\DbConnectException
+     * @throws \Scaleplan\Data\Exceptions\MemcachedCacheException
+     * @throws \Scaleplan\Data\Exceptions\MemcachedOperationException
+     * @throws \Scaleplan\Data\Exceptions\RedisCacheException
      * @throws \Scaleplan\Data\Exceptions\ValidationException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
+     * @throws \Scaleplan\Db\Exceptions\InvalidIsolationLevelException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      * @throws \Scaleplan\Db\Exceptions\QueryCountNotMatchParamsException
+     * @throws \Scaleplan\Db\Exceptions\QueryExecutionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
      * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
