@@ -108,18 +108,23 @@ abstract class AbstractRepository
             return null;
         }
 
-        $first = reset($tags)->getDescription();
-        if ($first === 'true') {
+        $value = explode(' ', reset($tags)->getDescription());
+        if ($value === 'true') {
             return true;
         }
 
-        if ($first === 'false') {
+        if ($value === 'false') {
             return false;
         }
 
-        $castings = [];
+        $castings = null;
         foreach ($tags as $cast) {
-            $castings[\trim($cast->getName())] = \trim($cast->getDescription());
+            $value = explode(' ', $cast->getDescription());
+            if (empty($value[1]) || empty($value[0])) {
+                continue;
+            }
+
+            $castings[\trim($value[0])] = \trim($value[1]);
         }
 
         return $castings;
