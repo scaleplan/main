@@ -14,6 +14,8 @@ use Scaleplan\Main\Exceptions\RepositoryMethodNotFoundException;
 use Scaleplan\Result\Interfaces\DbResultInterface;
 use function Scaleplan\DependencyInjection\get_required_container;
 use function Scaleplan\DependencyInjection\get_static_container;
+use function Scaleplan\Event\dispatch;
+use function Scaleplan\Event\dispatch_async;
 use function Scaleplan\Helpers\get_required_env;
 
 /**
@@ -34,11 +36,13 @@ abstract class AbstractRepository
     public const TABLE                  = null;
     public const DEFAULT_SORT_DIRECTION = 'DESC';
 
-    public const DB_NAME_TAG   = 'dbName';
-    public const PREFIX_TAG    = 'prefix';
-    public const MODIFYING_TAG = 'modifying';
-    public const MODEL_TAG     = 'model';
-    public const CASTINGS_TAG  = 'cast';
+    public const DB_NAME_TAG     = 'dbName';
+    public const PREFIX_TAG      = 'prefix';
+    public const MODIFYING_TAG   = 'modifying';
+    public const MODEL_TAG       = 'model';
+    public const CASTINGS_TAG    = 'cast';
+    public const EVENT_TAG       = 'event';
+    public const ASYNC_EVENT_TAG = 'asyncEvent';
 
     public const DB_CACHE_ENV = 'DB_CACHE_ENABLE';
 
@@ -132,6 +136,44 @@ abstract class AbstractRepository
 
     /**
      * @param DocBlock $docBlock
+     * @param DbResultInterface $data
+     *
+     * @throws \Scaleplan\Event\Exceptions\ClassNotImplementsEventInterfaceException
+     */
+    public static function dispatchEvents(DocBlock $docBlock, DbResultInterface $data) : void
+    {
+        $tags = $docBlock->getTagsByName(static::EVENT_TAG);
+        if (!$tags) {
+            return null;
+        }
+
+        foreach ($tags as $tag) {
+            $eventClass = trim($tag->getDescription());
+            dispatch($eventClass, ['data' => $data]);
+        }
+    }
+
+    /**
+     * @param DocBlock $docBlock
+     * @param DbResultInterface $data
+     *
+     * @throws \Scaleplan\Event\Exceptions\ClassNotImplementsEventInterfaceException
+     */
+    public static function dispatchAsyncEvents(DocBlock $docBlock, DbResultInterface $data) : void
+    {
+        $tags = $docBlock->getTagsByName(static::ASYNC_EVENT_TAG);
+        if (!$tags) {
+            return null;
+        }
+
+        foreach ($tags as $tag) {
+            $eventClass = trim($tag->getDescription());
+            dispatch_async($eventClass, ['data' => $data]);
+        }
+    }
+
+    /**
+     * @param DocBlock $docBlock
      *
      * @return string|null
      */
@@ -192,6 +234,7 @@ abstract class AbstractRepository
      * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
+     * @throws \Scaleplan\Event\Exceptions\ClassNotImplementsEventInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Result\Exceptions\ResultException
      */
@@ -237,6 +280,8 @@ abstract class AbstractRepository
 
         $result = $data->getValue();
         $result->setModelClass(static::getModelClass($docBlock));
+        static::dispatchEvents($docBlock, $result);
+        static::dispatchAsyncEvents($docBlock, $result);
 
         return $result;
     }
@@ -266,6 +311,7 @@ abstract class AbstractRepository
      * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
+     * @throws \Scaleplan\Event\Exceptions\ClassNotImplementsEventInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Result\Exceptions\ResultException
      */
@@ -299,6 +345,7 @@ abstract class AbstractRepository
      * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
+     * @throws \Scaleplan\Event\Exceptions\ClassNotImplementsEventInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Result\Exceptions\ResultException
      */
