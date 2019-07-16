@@ -144,7 +144,7 @@ abstract class AbstractRepository
     {
         $tags = $docBlock->getTagsByName(static::EVENT_TAG);
         if (!$tags) {
-            return null;
+            return;
         }
 
         foreach ($tags as $tag) {
@@ -163,7 +163,7 @@ abstract class AbstractRepository
     {
         $tags = $docBlock->getTagsByName(static::ASYNC_EVENT_TAG);
         if (!$tags) {
-            return null;
+            return;
         }
 
         foreach ($tags as $tag) {
