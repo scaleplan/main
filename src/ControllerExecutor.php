@@ -8,15 +8,15 @@ use Scaleplan\Access\Access;
 use Scaleplan\Access\AccessControllerParent;
 use Scaleplan\Data\Data;
 use Scaleplan\Data\Interfaces\CacheInterface;
-use function Scaleplan\DependencyInjection\get_required_container;
 use Scaleplan\Http\Constants\ContentTypes;
+use Scaleplan\Http\CurrentResponse;
 use Scaleplan\Http\Exceptions\InvalidUrlException;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
-use Scaleplan\Http\Interfaces\CurrentResponseInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Interfaces\ControllerExecutorInterface;
 use Scaleplan\Main\Interfaces\UserInterface;
 use Scaleplan\Result\Interfaces\ArrayResultInterface;
+use function Scaleplan\DependencyInjection\get_required_container;
 
 /**
  * Class ControllerExecutor
@@ -43,7 +43,7 @@ class ControllerExecutor implements ControllerExecutorInterface
     protected $request;
 
     /**
-     * @var CurrentResponseInterface
+     * @var CurrentResponse
      */
     protected $response;
 
@@ -95,6 +95,8 @@ class ControllerExecutor implements ControllerExecutorInterface
      * @param \ReflectionMethod $refMethod
      *
      * @return array
+     *
+     * @throws \InvalidArgumentException
      */
     protected static function getMethodTags(\ReflectionMethod $refMethod) : array
     {
@@ -166,7 +168,7 @@ class ControllerExecutor implements ControllerExecutorInterface
      */
     protected function convertURLToControllerMethod() : array
     {
-        $path = preg_split ('/[\/?]/', $this->request->getURL());
+        $path = preg_split('/[\/?]/', $this->request->getURL());
         $controllerName = getenv(ConfigConstants::CONTROLLERS_NAMESPACE)
             . str_replace(' ', '', ucwords(str_replace('-', ' ', $path[1])))
             . getenv(ConfigConstants::CONTROLLERS_POSTFIX);
@@ -181,6 +183,7 @@ class ControllerExecutor implements ControllerExecutorInterface
      *
      * @return string|null
      *
+     * @throws \InvalidArgumentException
      * @throws \Scaleplan\Data\Exceptions\DataException
      * @throws \Scaleplan\Data\Exceptions\ValidationException
      */
@@ -212,12 +215,12 @@ class ControllerExecutor implements ControllerExecutorInterface
     }
 
     /**
-     * @return CurrentResponseInterface
+     * @return CurrentResponse
      *
      * @throws InvalidUrlException
      * @throws \Throwable
      */
-    public function execute() : CurrentResponseInterface
+    public function execute() : CurrentResponse
     {
         if (empty($this->request->getURL()) || !static::checkUrl($this->request->getURL())) {
             throw new InvalidUrlException();
@@ -249,8 +252,8 @@ class ControllerExecutor implements ControllerExecutorInterface
 
             return $this->response;
         } catch (\Throwable $e) {
-            //$this->response->buildError($e);
-            throw $e;
+            $this->response->buildError($e);
+            //throw $e;
         }
     }
 }

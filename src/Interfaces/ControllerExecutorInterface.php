@@ -3,7 +3,7 @@
 namespace Scaleplan\Main\Interfaces;
 
 use Scaleplan\Data\Interfaces\CacheInterface;
-use Scaleplan\Http\Interfaces\CurrentResponseInterface;
+use Scaleplan\Http\CurrentResponse;
 
 /**
  * Interface ControllerExecutorInterface
@@ -33,7 +33,7 @@ interface ControllerExecutorInterface
     public function setCache(CacheInterface $cache) : void;
 
     /**
-     * @return CurrentResponseInterface
+     * @return CurrentResponse
      */
-    public function execute() : CurrentResponseInterface;
+    public function execute() : CurrentResponse;
 }
