@@ -98,6 +98,14 @@ class App
             throw new CacheException('Для подключения к кэшу не хватает параметра cacheType, либо он задан неверно');
         }
 
+        if ($cacheType === 'memcached' && !extension_loaded('memcached')) {
+            throw new CacheException('Расширение memcached не загруженно');
+        }
+
+        if ($cacheType === 'redis' && !extension_loaded('redis')) {
+            throw new CacheException('Расширение redis не загруженно');
+        }
+
         if ($cacheType === 'memcached' && !$port) {
             throw new CacheException(
                 'Для Memcached недоступно подключение к Unix-сокету. Необходимо задать порт подключения'
@@ -158,6 +166,19 @@ class App
         static::$locale = locale_accept_from_http($_SERVER['HTTP_ACCEPT_LANGUAGE']) ?: get_required_env('DEFAULT_LANG');
         setlocale(LC_ALL , static::$locale);
         date_default_timezone_set(static::$timeZone->getName());
+    }
+
+    /**
+     * @return string
+     */
+    public static function getLang() : string
+    {
+        static $lang;
+        if (!$lang) {
+            $lang =  explode('_', static::$locale)[0];
+        }
+
+        return $lang;
     }
 
     /**

@@ -3,6 +3,9 @@
 namespace Scaleplan\Main;
 
 use phpDocumentor\Reflection\DocBlock;
+use Scaleplan\Cache\Exceptions\MemcachedCacheException;
+use Scaleplan\Cache\Exceptions\MemcachedOperationException;
+use Scaleplan\Cache\Exceptions\RedisCacheException;
 use Scaleplan\Data\Data;
 use Scaleplan\Data\Interfaces\DataInterface;
 use Scaleplan\DTO\DTO;
@@ -221,9 +224,9 @@ abstract class AbstractRepository
      * @throws \ReflectionException
      * @throws \Scaleplan\Data\Exceptions\DataException
      * @throws \Scaleplan\Data\Exceptions\DbConnectException
-     * @throws \Scaleplan\Data\Exceptions\MemcachedCacheException
-     * @throws \Scaleplan\Data\Exceptions\MemcachedOperationException
-     * @throws \Scaleplan\Data\Exceptions\RedisCacheException
+     * @throws MemcachedCacheException
+     * @throws MemcachedOperationException
+     * @throws RedisCacheException
      * @throws \Scaleplan\Data\Exceptions\ValidationException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
      * @throws \Scaleplan\Db\Exceptions\InvalidIsolationLevelException
@@ -298,9 +301,9 @@ abstract class AbstractRepository
      * @throws \ReflectionException
      * @throws \Scaleplan\Data\Exceptions\DataException
      * @throws \Scaleplan\Data\Exceptions\DbConnectException
-     * @throws \Scaleplan\Data\Exceptions\MemcachedCacheException
-     * @throws \Scaleplan\Data\Exceptions\MemcachedOperationException
-     * @throws \Scaleplan\Data\Exceptions\RedisCacheException
+     * @throws MemcachedCacheException
+     * @throws MemcachedOperationException
+     * @throws RedisCacheException
      * @throws \Scaleplan\Data\Exceptions\ValidationException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
      * @throws \Scaleplan\Db\Exceptions\InvalidIsolationLevelException
@@ -332,9 +335,9 @@ abstract class AbstractRepository
      * @throws \ReflectionException
      * @throws \Scaleplan\Data\Exceptions\DataException
      * @throws \Scaleplan\Data\Exceptions\DbConnectException
-     * @throws \Scaleplan\Data\Exceptions\MemcachedCacheException
-     * @throws \Scaleplan\Data\Exceptions\MemcachedOperationException
-     * @throws \Scaleplan\Data\Exceptions\RedisCacheException
+     * @throws MemcachedCacheException
+     * @throws MemcachedOperationException
+     * @throws RedisCacheException
      * @throws \Scaleplan\Data\Exceptions\ValidationException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
      * @throws \Scaleplan\Db\Exceptions\InvalidIsolationLevelException

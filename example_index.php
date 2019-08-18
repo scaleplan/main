@@ -1,46 +1,83 @@
 <?php
 
+declare(strict_types=1);
+
 ob_start();
 
-require $_SERVER['DOCUMENT_ROOT'] . '/vendor/autoload.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/app/vendor/autoload.php';
 
 use App\Classes\App;
-use Scaleplan\Helpers\Helper;
-use function Scaleplan\Helpers\get_required_env;
-use Scaleplan\Access\Access;
-use Scaleplan\Access\AccessModify;
-use function Scaleplan\DependencyInjection\get_required_container;
-use Scaleplan\Main\Interfaces\ControllerExecutorInterface;
+use App\Models\User;
+use Psr\Log\LoggerInterface;
+use Scaleplan\AccessToFiles\AccessToFiles;
 use Scaleplan\AccessToFiles\AccessToFilesInterface;
+use Scaleplan\DependencyInjection\DependencyInjection;
+use Scaleplan\Helpers\Helper;
+use Scaleplan\Main\Interfaces\ControllerExecutorInterface;
+use Scaleplan\Main\Interfaces\UserInterface;
+use function Scaleplan\DependencyInjection\get_required_container;
+use function Scaleplan\Helpers\get_required_env;
 
-try {
-    $dotEnv = new Dotenv\Dotenv($_SERVER['DOCUMENT_ROOT']);
+/**
+ * @throws ReflectionException
+ * @throws \Dotenv\Exception\InvalidFileException
+ * @throws \Dotenv\Exception\InvalidPathException
+ * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+ * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+ * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+ * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
+ * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+ * @throws \Scaleplan\Main\Exceptions\InvalidHostException
+ */
+function init()
+{
+    $dotEnv = Dotenv\Dotenv::create(__DIR__);
     $dotEnv->load();
 
-    session_start(['name' => get_required_env('PROJECT_NAME'), 'cookie_domain' => '.' . get_required_env('DOMAIN')]);
-    /** @var \Scaleplan\Main\Interfaces\UserInterface $currentUser */
-    $currentUser = get_required_container(\Scaleplan\Main\Interfaces\UserInterface::class);
-    App::init();
-    $accessConfigPath = get_required_env('ACCESS_CONFIG_PATH');
-    Access::getInstance($currentUser->getId(), $accessConfigPath);
-    /** @var AccessModify $accessModify */
-    $accessModify = AccessModify::getInstance($currentUser->getId(), $accessConfigPath);
-    $accessModify->saveAccessRightsToCache();
+    session_name(get_required_env('PROJECT_NAME'));
+    session_set_cookie_params(0, '/', '.' . get_required_env('DOMAIN'));
+    session_start();
 
+    DependencyInjection::loadContainersFromDir(__DIR__ . get_required_env('CONTAINERS_CONFIGS_PATH'));
+    App::init();
+    /** @var User $currentUser */
+    $currentUser = get_required_container(UserInterface::class);
+    App::redirectToDefaultIfRoot($currentUser->getRole());
+    register_shutdown_function(static function () {
+        Helper::allDBCommit(App::getDatabases());
+        /** @var AccessToFiles $af */
+        $af = get_required_container(AccessToFilesInterface::class);
+        $af->allowFiles();
+    });
+}
+
+/**
+ * @param \Throwable $e
+ *
+ * @throws ReflectionException
+ * @throws \Throwable
+ * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
+ * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+ * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+ * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+ * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
+ */
+function error(\Throwable $e)
+{
+    Helper::allDBRollback(App::getDatabases());
+    /** @var AccessToFiles $af */
+    $af = get_required_container(AccessToFilesInterface::class);
+    $af->clearFiles();
+    $logger = get_required_container(LoggerInterface::class);
+    $logger->error($e->getMessage());
+    throw $e;
+}
+
+try {
+    init();
     /** @var \Scaleplan\Main\ControllerExecutor $executor */
     $executor = get_required_container(ControllerExecutorInterface::class);
-    $executor->execute()->send();
-
-    session_write_close();
-    fastcgi_finish_request();
-    Helper::allDBCommit(App::getDatabases());
-
-    /** @var AccessToFilesInterface $af */
-    $af = get_required_container(AccessToFilesInterface::class);
-    $af->allowFiles();
-
-} catch (Throwable $e) {
-    Helper::allDBRollback(App::getDatabases());
-    $log->error($e->getMessage());
-    //throw $e;
+    $executor->execute();
+} catch (\Throwable $e) {
+    error($e);
 }
