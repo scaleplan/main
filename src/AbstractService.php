@@ -2,9 +2,6 @@
 
 namespace Scaleplan\Main;
 
-use Scaleplan\DTO\DTO;
-use Scaleplan\Result\Interfaces\DbResultInterface;
-
 /**
  * Class AbstractService
  *
