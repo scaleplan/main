@@ -65,22 +65,6 @@ trait RepositoryTrait
     /**
      * @dbName $current
      */
-    public static $activate =
-        'UPDATE ' . self::TABLE
-        . ' SET is_active = true'
-        . ' WHERE id = :id';
-
-    /**
-     * @dbName $current
-     */
-    public static $deactivate =
-        'UPDATE ' . self::TABLE
-        . ' SET is_active = false'
-        . ' WHERE id = :id';
-
-    /**
-     * @dbName $current
-     */
     public static $getAccessList =
                        "WITH r AS (SELECT
                          (CASE WHEN rr.is_allow THEN rr.ids END) allow,
