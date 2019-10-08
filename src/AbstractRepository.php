@@ -29,8 +29,8 @@ use function Scaleplan\Helpers\get_required_env;
  * @method DbResultInterface getFullInfo(array|DTO $data)
  * @method DbResultInterface put(array|DTO $data)
  * @method DbResultInterface update(array|DTO $data)
- * @method DbResultInterface delete(DTO $id)
- * @method DbResultInterface getInfo(DTO $id)
+ * @method DbResultInterface delete(DTO|array $id)
+ * @method DbResultInterface getInfo(DTO|array $id)
  * @method DbResultInterface getList(array|DTO $data)
  * @method DbResultInterface deactivate(array|DTO $data)
  */
