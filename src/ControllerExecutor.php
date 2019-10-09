@@ -250,8 +250,8 @@ class ControllerExecutor implements ControllerExecutorInterface
             $this->response->setPayload($result);
             $this->response->send();
         } catch (\Throwable $e) {
-            $this->response->buildError($e);
-            //throw $e;
+            //$this->response->buildError($e);
+            throw $e;
         }
 
         return $this->response;
