@@ -2,11 +2,10 @@
 
 namespace Scaleplan\Main;
 
+use App\Interfaces\Service\UserServiceInterface;
 use Scaleplan\Db\Db;
 use Scaleplan\Db\Interfaces\DbInterface;
 use Scaleplan\Db\Interfaces\TableTagsInterface;
-use function Scaleplan\DependencyInjection\get_required_container;
-use function Scaleplan\Helpers\get_required_env;
 use Scaleplan\Helpers\Helper;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
@@ -16,6 +15,8 @@ use Scaleplan\Main\Exceptions\InvalidHostException;
 use Scaleplan\Main\Interfaces\UserInterface;
 use Scaleplan\NginxGeo\NginxGeoInterface;
 use Symfony\Component\Yaml\Yaml;
+use function Scaleplan\DependencyInjection\get_required_container;
+use function Scaleplan\Helpers\get_required_env;
 
 /**
  * Class App
@@ -147,6 +148,7 @@ class App
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Scaleplan\Result\Exceptions\ResultException
      */
     public static function init() : void
     {
@@ -164,7 +166,7 @@ class App
             : date_default_timezone_get();
         static::$timeZone = new \DateTimeZone($timeZoneName);
         static::$locale = locale_accept_from_http($_SERVER['HTTP_ACCEPT_LANGUAGE']) ?: get_required_env('DEFAULT_LANG');
-        setlocale(LC_ALL , static::$locale);
+        setlocale(LC_ALL, static::$locale);
         date_default_timezone_set(static::$timeZone->getName());
     }
 
@@ -175,7 +177,7 @@ class App
     {
         static $lang;
         if (!$lang) {
-            $lang =  explode('_', static::$locale)[0];
+            $lang = explode('_', static::$locale)[0];
         }
 
         return $lang;
@@ -315,7 +317,7 @@ class App
         $request = get_required_container(CurrentRequestInterface::class);
         $url = explode('?', $request->getURL())[0];
         $path = getenv('VIEWS_CONFIG')
-            ? (include (get_required_env(ConfigConstants::BUNDLE_PATH) . getenv('VIEWS_CONFIG')))[$url] ?? null
+            ? (include(get_required_env(ConfigConstants::BUNDLE_PATH) . getenv('VIEWS_CONFIG')))[$url] ?? null
             : null;
         if (!$path) {
             $path = get_required_env(ConfigConstants::PRIVATE_TEMPLATES_PATH)

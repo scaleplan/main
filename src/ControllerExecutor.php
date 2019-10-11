@@ -183,7 +183,8 @@ class ControllerExecutor implements ControllerExecutorInterface
      *
      * @return string|null
      *
-     * @throws \InvalidArgumentException
+     * @throws \Scaleplan\Cache\Exceptions\MemcachedCacheException
+     * @throws \Scaleplan\Cache\Exceptions\RedisCacheException
      * @throws \Scaleplan\Data\Exceptions\DataException
      * @throws \Scaleplan\Data\Exceptions\ValidationException
      */
