@@ -54,6 +54,11 @@ class View implements ViewInterface
     protected $isMessage = false;
 
     /**
+     * @var string
+     */
+    protected $title;
+
+    /**
      * View constructor.
      *
      * @param string $filePath - путь к файлу шаблона
@@ -140,6 +145,14 @@ class View implements ViewInterface
     }
 
     /**
+     * @param string $title
+     */
+    public function setTitle(string $title) : void
+    {
+        $this->title = $title;
+    }
+
+    /**
      * Отрендерить страницу
      *
      * @return PhpQueryObject
@@ -155,6 +168,9 @@ class View implements ViewInterface
         $page->removeForbidden();
         $page->renderIncludes();
         $template = $page->getTemplate();
+        if ($this->title) {
+            $template->find('title')->text($this->title);
+        }
 
         foreach ($this->data as $selector => $data) {
             $page->setMultiData($data->getArrayResult(), $selector);
@@ -168,6 +184,7 @@ class View implements ViewInterface
      *
      * @return PhpQueryObject
      *
+     * @throws \PhpQuery\Exceptions\PhpQueryException
      * @throws \ReflectionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
      * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
@@ -175,12 +192,14 @@ class View implements ViewInterface
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Result\Exceptions\ResultException
+     * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
      */
     public static function renderError(\Throwable $e) : PhpQueryObject
     {
         $view = new static(get_required_env('ERRORS_PATH')
             . (get_env('ERROR_TEMPLATE_PATH') ?? static::ERROR_TEMPLATE_PATH));
         $view->addData(new DbResult(['code' => $e->getCode(), 'message' => $e->getMessage()]));
+        $view->setTitle($e->getMessage());
 
         return $view->render();
     }

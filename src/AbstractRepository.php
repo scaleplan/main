@@ -50,15 +50,29 @@ abstract class AbstractRepository
     public const DB_CACHE_ENV = 'DB_CACHE_ENABLE';
 
     /**
+     * @var string
+     */
+    protected $currentDbName;
+
+    /**
+     * @param string $dbName
+     */
+    public function setCurrentDbName(string $dbName) : void
+    {
+        $this->currentDbName = $dbName;
+    }
+
+    /**
      * Вернуть имя базы данных в зависимости от субдомена
      *
      * @param DocBlock $docBlock - блок описания метода получения имени базы данных
+     * @param AbstractRepository $object - объект репозитория
      *
      * @return string
      *
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
-    public static function getDbName(DocBlock $docBlock) : string
+    public static function getDbName(DocBlock $docBlock, self $object) : string
     {
         $docParam = $docBlock->getTagsByName(static::DB_NAME_TAG)[0] ?? null;
         if (!$docParam) {
@@ -69,7 +83,7 @@ abstract class AbstractRepository
 
         switch ($dbName) {
             case '$current':
-                return Helper::getSubdomain();
+                return $object->currentDbName ?: Helper::getSubdomain();
 
             default:
                 return $dbName;
@@ -214,7 +228,7 @@ abstract class AbstractRepository
     /**
      * @param string $propertyName
      * @param array $params
-     * @param object|null $object
+     * @param self|null $object
      *
      * @return DbResultInterface
      *
@@ -241,7 +255,11 @@ abstract class AbstractRepository
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Result\Exceptions\ResultException
      */
-    public static function invoke(string $propertyName, array $params, object $object = null) : DbResultInterface
+    public static function invoke(
+        string $propertyName,
+        array $params,
+        self $object = null
+    ) : DbResultInterface
     {
         if ($params && empty($params[0])) {
             throw new RepositoryMethodArgsInvalidException($propertyName);
@@ -269,7 +287,7 @@ abstract class AbstractRepository
         $app = get_static_container(App::class);
         /** @var Data $data */
         $data = get_required_container(DataInterface::class, [$sql, $params]);
-        $data->setDbConnect($app::getDB(static::getDbName($docBlock)));
+        $data->setDbConnect($app::getDB(static::getDbName($docBlock, $object)));
         $data->setPrefix(static::getPrefix($docBlock));
         if (static::isModifying($docBlock)) {
             $data->setIsModifying();

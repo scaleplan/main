@@ -3,16 +3,15 @@
 namespace Scaleplan\Main;
 
 use App\Classes\App;
-use function Scaleplan\DependencyInjection\get_required_container;
-use function Scaleplan\Helpers\get_required_env;
 use Scaleplan\Helpers\NameConverter;
-use Scaleplan\Http\CurrentRequest;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Exceptions\ControllerException;
 use Scaleplan\Result\HTMLResult;
 use Scaleplan\Result\Interfaces\DbResultInterface;
 use Scaleplan\Result\Interfaces\ResultInterface;
+use function Scaleplan\DependencyInjection\get_required_container;
+use function Scaleplan\Helpers\get_required_env;
 
 /**
  * Class Controller
@@ -34,7 +33,7 @@ abstract class AbstractController
     protected $serviceName;
 
     /**
-     * @var CurrentRequest
+     * @var CurrentRequestInterface
      */
     protected $request;
 
@@ -182,7 +181,7 @@ abstract class AbstractController
         $model = strtr(
             substr(strrchr(static::class, "\\"), 1),
             [
-                get_required_env(ConfigConstants::CONTROLLERS_POSTFIX) => '',
+                get_required_env(ConfigConstants::CONTROLLERS_POSTFIX)       => '',
                 get_required_env(ConfigConstants::CONTROLLERS_METHOD_PREFIX) => '',
             ]
         );
