@@ -2,7 +2,6 @@
 
 namespace Scaleplan\Main;
 
-use App\Interfaces\Service\UserServiceInterface;
 use Scaleplan\Db\Db;
 use Scaleplan\Db\Interfaces\DbInterface;
 use Scaleplan\Db\Interfaces\TableTagsInterface;
@@ -148,7 +147,6 @@ class App
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
-     * @throws \Scaleplan\Result\Exceptions\ResultException
      */
     public static function init() : void
     {

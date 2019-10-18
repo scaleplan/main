@@ -202,7 +202,6 @@ class ControllerExecutor implements ControllerExecutorInterface
     /**
      * @return CurrentResponse
      *
-     * @throws InvalidUrlException
      * @throws \Throwable
      */
     public function execute() : CurrentResponse

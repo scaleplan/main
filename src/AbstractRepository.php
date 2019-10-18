@@ -72,7 +72,7 @@ abstract class AbstractRepository
      *
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
-    public static function getDbName(DocBlock $docBlock, self $object) : string
+    public static function getDbName(DocBlock $docBlock, ?self $object) : string
     {
         $docParam = $docBlock->getTagsByName(static::DB_NAME_TAG)[0] ?? null;
         if (!$docParam) {
@@ -83,7 +83,11 @@ abstract class AbstractRepository
 
         switch ($dbName) {
             case '$current':
-                return $object->currentDbName ?: Helper::getSubdomain();
+                if ($object) {
+                    return $object->currentDbName ?: Helper::getSubdomain();
+                }
+
+                return Helper::getSubdomain();
 
             default:
                 return $dbName;

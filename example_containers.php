@@ -21,7 +21,7 @@ return [
         $logPath = get_required_env('LOG_PATH');
 
         $logger = new Logger(get_required_env('APP_NAME'));
-        $logger::setTimezone(App::getTimeZone());
+        $logger->setTimezone(App::getTimeZone());
         $logger->pushHandler(new StreamHandler("$logPath/error.log", $minLevel));
 
         return $logger;
