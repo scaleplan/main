@@ -28,11 +28,6 @@ class ControllerExecutor implements ControllerExecutorInterface
     public const DOCBLOCK_TAGS_LABEL = 'tags';
 
     /**
-     * Шаблон проверки правильности формата URL
-     */
-    public const PAGE_URL_TEMPLATE = '/^.+?\/[^\/]+$/';
-
-    /**
      * @var LoggerInterface
      */
     protected $logger;
@@ -56,6 +51,11 @@ class ControllerExecutor implements ControllerExecutorInterface
      * @var CacheInterface
      */
     protected $cache;
+
+    /**
+     * @var string
+     */
+    protected $defaultControllerPath = 'default';
 
     /**
      * ControllerExecutor constructor.
@@ -173,7 +173,7 @@ class ControllerExecutor implements ControllerExecutorInterface
             . str_replace(' ', '', ucwords(str_replace('-', ' ', $path[1])))
             . getenv(ConfigConstants::CONTROLLERS_POSTFIX);
         $methodName = getenv(ConfigConstants::CONTROLLERS_METHOD_PREFIX)
-            . str_replace(' ', '', ucwords(str_replace('-', ' ', $path[2])));
+            . str_replace(' ', '', ucwords(str_replace('-', ' ', $path[2] ?? $this->defaultControllerPath)));
 
         return [$controllerName, $methodName];
     }
@@ -200,22 +200,6 @@ class ControllerExecutor implements ControllerExecutorInterface
     }
 
     /**
-     * Проверить URL на соответствие маске по умолчанию
-     *
-     * @param string $url - URL
-     *
-     * @return bool
-     */
-    public static function checkUrl(string $url) : bool
-    {
-        if (!($template = getenv('PAGE_URL_TEMPLATE') ?: static::PAGE_URL_TEMPLATE)) {
-            return true;
-        }
-
-        return !empty($url) && preg_match($template, $url);
-    }
-
-    /**
      * @return CurrentResponse
      *
      * @throws InvalidUrlException
@@ -223,9 +207,6 @@ class ControllerExecutor implements ControllerExecutorInterface
      */
     public function execute() : CurrentResponse
     {
-        if (empty($this->request->getURL()) || !static::checkUrl($this->request->getURL())) {
-            throw new InvalidUrlException();
-        }
         try {
             [$controllerName, $methodName] = $this->convertURLToControllerMethod();
 

@@ -59,6 +59,11 @@ class View implements ViewInterface
     protected $title;
 
     /**
+     * @var string
+     */
+    protected $userRole;
+
+    /**
      * View constructor.
      *
      * @param string $filePath - путь к файлу шаблона
@@ -83,6 +88,14 @@ class View implements ViewInterface
         $this->settings['forbiddenSelectors']
             = $this->settings['forbiddenSelectors'] ?? $access->getForbiddenSelectors($currentRequest->getURL());
         $this->settings = $settings;
+    }
+
+    /**
+     * @param string $userRole
+     */
+    public function setUserRole(string $userRole) : void
+    {
+        $this->userRole = $userRole;
     }
 
     /**
@@ -165,6 +178,7 @@ class View implements ViewInterface
     public function render() : PhpQueryObject
     {
         $page = new Templater(static::getFullFilePath($this->filePath), $this->settings);
+        $page->setUserRole($this->userRole);
         $page->removeForbidden();
         $page->renderIncludes();
         $template = $page->getTemplate();
