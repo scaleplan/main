@@ -212,7 +212,9 @@ class View implements ViewInterface
     {
         $view = new static(get_required_env('ERRORS_PATH')
             . (get_env('ERROR_TEMPLATE_PATH') ?? static::ERROR_TEMPLATE_PATH));
-        $view->addData(new DbResult(['code' => $e->getCode(), 'message' => $e->getMessage()]));
+        $view->addData(
+            new DbResult(['code' => $e->getCode(), 'message' => iconv('UTF-8', 'UTF-8//IGNORE', $e->getMessage())])
+        );
         $view->setTitle($e->getMessage());
 
         return $view->render();

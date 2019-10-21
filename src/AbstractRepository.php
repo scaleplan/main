@@ -47,8 +47,6 @@ abstract class AbstractRepository
     public const EVENT_TAG       = 'event';
     public const ASYNC_EVENT_TAG = 'asyncEvent';
 
-    public const DB_CACHE_ENV = 'DB_CACHE_ENABLE';
-
     /**
      * @var string
      */
@@ -297,7 +295,6 @@ abstract class AbstractRepository
             $data->setIsModifying();
         }
 
-        $data->setCacheEnable((bool)getenv(static::DB_CACHE_ENV));
         $castings = static::getCastings($docBlock);
         if (null !== $castings) {
             $data->setCastings($castings);
