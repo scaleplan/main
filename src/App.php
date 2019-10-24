@@ -163,8 +163,13 @@ class App
             ? geoip_time_zone_by_country_and_region($geo->getCountryCode(), $geo->getRegionCode())
             : date_default_timezone_get();
         static::$timeZone = new \DateTimeZone($timeZoneName);
-        static::$locale = locale_accept_from_http($_SERVER['HTTP_ACCEPT_LANGUAGE']) ?: get_required_env('DEFAULT_LANG');
+
+        static::$locale = get_required_env('DEFAULT_LANG');
+        if (!empty($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+            static::$locale = locale_accept_from_http($_SERVER['HTTP_ACCEPT_LANGUAGE']);
+        }
         setlocale(LC_ALL, static::$locale);
+
         date_default_timezone_set(static::$timeZone->getName());
     }
 
