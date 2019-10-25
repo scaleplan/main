@@ -263,12 +263,12 @@ abstract class AbstractRepository
         self $object = null
     ) : DbResultInterface
     {
-        if ($params && empty($params[0])) {
-            throw new RepositoryMethodArgsInvalidException($propertyName);
-        }
+//        if ($params && empty($params[0])) {
+//            throw new RepositoryMethodArgsInvalidException(null, $propertyName);
+//        }
 
         if ($params && \is_array($params[0]) && !ArrayHelper::isAccos($params[0])) {
-            throw new RepositoryMethodArgsInvalidException($propertyName);
+            throw new RepositoryMethodArgsInvalidException(null, $propertyName);
         }
 
         $params && $params = $params[0];

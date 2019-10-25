@@ -21,7 +21,7 @@ abstract class AbstractException extends \Exception
      * @param \Throwable|null $previous
      */
     public function __construct(
-        string $message = '',
+        string $message = null,
         string $subject = null,
         int $code = 0,
         \Throwable $previous = null
