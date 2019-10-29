@@ -13,6 +13,7 @@ use Scaleplan\Http\CurrentResponse;
 use Scaleplan\Http\Exceptions\InvalidUrlException;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
+use Scaleplan\Main\Exceptions\ViewNotFoundException;
 use Scaleplan\Main\Interfaces\ControllerExecutorInterface;
 use Scaleplan\Main\Interfaces\UserInterface;
 use Scaleplan\Result\Interfaces\ArrayResultInterface;
@@ -85,7 +86,9 @@ class ControllerExecutor implements ControllerExecutorInterface
         if (!$cache) {
             /** @var Data $cache */
             $cache = get_required_container(CacheInterface::class, [$this->request->getURL(), $this->request->getParams()]);
-            $cache->setVerifyingFilePath(View::getFullFilePath(App::getViewPath()));
+            try {
+                $cache->setVerifyingFilePath(View::getFullFilePath(App::getViewPath()));
+            } catch (ViewNotFoundException $e) { }
         }
         $this->cache = $cache;
         $this->logger = get_required_container(LoggerInterface::class);
