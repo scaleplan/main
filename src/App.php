@@ -11,6 +11,7 @@ use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Exceptions\CacheException;
 use Scaleplan\Main\Exceptions\DatabaseException;
 use Scaleplan\Main\Exceptions\InvalidHostException;
+use Scaleplan\Main\Exceptions\ViewNotFoundException;
 use Scaleplan\Main\Interfaces\UserInterface;
 use Scaleplan\NginxGeo\NginxGeoInterface;
 use Symfony\Component\Yaml\Yaml;
@@ -305,8 +306,11 @@ class App
     }
 
     /**
-     * @return string|null
+     * @param null $role
      *
+     * @return string
+     *
+     * @throws ViewNotFoundException
      * @throws \ReflectionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
      * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
@@ -314,30 +318,60 @@ class App
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
-    public static function getViewPath() : ?string
+    public static function getViewPath($role = null) : string
     {
         /** @var CurrentRequestInterface $request */
         $request = get_required_container(CurrentRequestInterface::class);
         $url = explode('?', $request->getURL())[0];
-        $path = getenv('VIEWS_CONFIG')
+        $pathsToCheck = [];
+
+        if ($role) {
+            $pathArray = explode('/', $url);
+            $tplName = array_pop($pathArray);
+            $fileDirectory = implode('/', $pathArray);
+            $roleFilePath = "$fileDirectory/$role-$tplName.html";
+
+            $pathsToCheck[] = getenv('VIEWS_CONFIG')
+                ? (include(get_required_env(ConfigConstants::BUNDLE_PATH)
+                    . getenv('VIEWS_CONFIG')))[$roleFilePath] ?? null
+                : null;
+
+            $pathsToCheck[] = get_required_env(ConfigConstants::PRIVATE_TEMPLATES_PATH)
+                . '/' . static::getLocale()
+                . $roleFilePath
+                . '.html';
+
+            $pathsToCheck[] = get_required_env(ConfigConstants::PUBLIC_TEMPLATES_PATH)
+                . '/' . static::getLocale()
+                . $roleFilePath
+                . '.html';
+        }
+
+        $pathsToCheck[] = getenv('VIEWS_CONFIG')
             ? (include(get_required_env(ConfigConstants::BUNDLE_PATH) . getenv('VIEWS_CONFIG')))[$url] ?? null
             : null;
-        if (!$path) {
-            $path = get_required_env(ConfigConstants::PRIVATE_TEMPLATES_PATH)
+
+        $pathsToCheck[] = get_required_env(ConfigConstants::PRIVATE_TEMPLATES_PATH)
                 . '/' . static::getLocale()
                 . $url
                 . '.html';
+
+        $pathsToCheck[] = get_required_env(ConfigConstants::PUBLIC_TEMPLATES_PATH)
+            . '/' . static::getLocale()
+            . $url
+            . '.html';
+
+        foreach ($pathsToCheck as $path) {
+            $pathsToCheck = get_required_env(ConfigConstants::BUNDLE_PATH)
+                . get_required_env(ConfigConstants::VIEWS_PATH)
+                . $path;
+            if (!$path || !file_exists($pathsToCheck)) {
+                continue;
+            }
+
+            return $path;
         }
 
-        if (!file_exists(get_required_env(ConfigConstants::BUNDLE_PATH)
-            . get_required_env(ConfigConstants::VIEWS_PATH)
-            . $path)) {
-            $path = get_required_env(ConfigConstants::PUBLIC_TEMPLATES_PATH)
-                . '/' . static::getLocale()
-                . $url
-                . '.html';
-        }
-
-        return $path;
+        throw new ViewNotFoundException(null, $url);
     }
 }
