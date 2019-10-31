@@ -6,11 +6,11 @@ use phpDocumentor\Reflection\DocBlock;
 use Psr\Log\LoggerInterface;
 use Scaleplan\Access\Access;
 use Scaleplan\Access\AccessControllerParent;
+use Scaleplan\Access\Exceptions\AuthException;
 use Scaleplan\Data\Data;
 use Scaleplan\Data\Interfaces\CacheInterface;
 use Scaleplan\Http\Constants\ContentTypes;
 use Scaleplan\Http\CurrentResponse;
-use Scaleplan\Http\Exceptions\InvalidUrlException;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Exceptions\ViewNotFoundException;
@@ -88,7 +88,8 @@ class ControllerExecutor implements ControllerExecutorInterface
             $cache = get_required_container(CacheInterface::class, [$this->request->getURL(), $this->request->getParams()]);
             try {
                 $cache->setVerifyingFilePath(View::getFullFilePath(App::getViewPath()));
-            } catch (ViewNotFoundException $e) { }
+            } catch (ViewNotFoundException $e) {
+            }
         }
         $this->cache = $cache;
         $this->logger = get_required_container(LoggerInterface::class);
@@ -233,6 +234,10 @@ class ControllerExecutor implements ControllerExecutorInterface
 
             $this->response->setPayload($result);
             $this->response->send();
+        } catch (AuthException $e) {
+            /** @var UserInterface $user */
+            $user = get_required_container(UserInterface::class);
+            $this->response->redirectUnauthorizedUser($user);
         } catch (\Throwable $e) {
             $this->response->buildError($e);
             //throw $e;

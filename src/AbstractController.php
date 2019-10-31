@@ -4,6 +4,7 @@ namespace Scaleplan\Main;
 
 use App\Classes\App;
 use Scaleplan\Helpers\NameConverter;
+use Scaleplan\Http\Constants\ContentTypes;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Exceptions\ControllerException;
@@ -147,7 +148,7 @@ abstract class AbstractController
      * @param string $parentSelector - куда на странице вставлять результат запроса
      *
      * @return ResultInterface
-     *
+     * @throws Exceptions\ViewNotFoundException
      * @throws \PhpQuery\Exceptions\PhpQueryException
      * @throws \ReflectionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
@@ -159,7 +160,7 @@ abstract class AbstractController
      */
     protected function formatResponse(DbResultInterface $result, string $parentSelector = 'body') : ResultInterface
     {
-        if ($this->request->isAjax()) {
+        if ($this->request->isAjax() || $this->request->getAccept() === ContentTypes::JSON) {
             return $result;
         }
 

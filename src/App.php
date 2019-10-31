@@ -329,7 +329,7 @@ class App
             $pathArray = explode('/', $url);
             $tplName = array_pop($pathArray);
             $fileDirectory = implode('/', $pathArray);
-            $roleFilePath = "$fileDirectory/$role-$tplName.html";
+            $roleFilePath = "$fileDirectory/$role-$tplName";
 
             $pathsToCheck[] = getenv('VIEWS_CONFIG')
                 ? (include(get_required_env(ConfigConstants::BUNDLE_PATH)
