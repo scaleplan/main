@@ -235,6 +235,10 @@ class ControllerExecutor implements ControllerExecutorInterface
             $this->response->setPayload($result);
             $this->response->send();
         } catch (AuthException $e) {
+            if ($this->request->getAccept() === ContentTypes::JSON) {
+                $this->response->buildError($e);
+            }
+
             /** @var UserInterface $user */
             $user = get_required_container(UserInterface::class);
             $this->response->redirectUnauthorizedUser($user);

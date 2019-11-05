@@ -32,10 +32,16 @@ trait RepositoryTrait
      * @dbName $current
      */
     public static $getList =
-        'SELECT id, name'
-        . ' FROM ' . self::TABLE
-        . ' [LIMIT :limit]'
-        . ' [OFFSET :offset]';
+        '[(SELECT id, name
+            FROM ' . self::TABLE
+        . ' WHERE id = :id)
+            UNION]
+          (SELECT id, name
+            FROM ' . self::TABLE
+        . ' WHERE 1 = 1
+             [AND id != :id]
+           [LIMIT :limit]
+           [OFFSET :offset])';
 
     /**
      * @dbName $current
