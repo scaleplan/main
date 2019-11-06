@@ -46,6 +46,7 @@ abstract class AbstractRepository
     public const CASTINGS_TAG    = 'cast';
     public const EVENT_TAG       = 'event';
     public const ASYNC_EVENT_TAG = 'asyncEvent';
+    public const ASYNC_TAG       = 'async';
 
     /**
      * @var string
@@ -117,6 +118,16 @@ abstract class AbstractRepository
     public static function isModifying(DocBlock $docBlock) : bool
     {
         return (bool)$docBlock->getTagsByName(static::MODIFYING_TAG);
+    }
+
+    /**
+     * @param DocBlock $docBlock
+     *
+     * @return bool
+     */
+    public static function isAsync(DocBlock $docBlock) : bool
+    {
+        return (bool)$docBlock->getTagsByName(static::ASYNC_TAG);
     }
 
     /**
@@ -230,21 +241,22 @@ abstract class AbstractRepository
     /**
      * @param string $propertyName
      * @param array $params
-     * @param self|null $object
+     * @param AbstractRepository|null $object
      *
      * @return DbResultInterface
      *
      * @throws Exceptions\DatabaseException
+     * @throws MemcachedCacheException
+     * @throws MemcachedOperationException
+     * @throws RedisCacheException
      * @throws RepositoryMethodArgsInvalidException
      * @throws RepositoryMethodNotFoundException
      * @throws \ReflectionException
      * @throws \Scaleplan\Data\Exceptions\DataException
      * @throws \Scaleplan\Data\Exceptions\DbConnectException
-     * @throws MemcachedCacheException
-     * @throws MemcachedOperationException
-     * @throws RedisCacheException
      * @throws \Scaleplan\Data\Exceptions\ValidationException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
+     * @throws \Scaleplan\Db\Exceptions\DbException
      * @throws \Scaleplan\Db\Exceptions\InvalidIsolationLevelException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      * @throws \Scaleplan\Db\Exceptions\QueryCountNotMatchParamsException
@@ -290,6 +302,11 @@ abstract class AbstractRepository
         /** @var Data $data */
         $data = get_required_container(DataInterface::class, [$sql, $params]);
         $data->setDbConnect($app::getDB(static::getDbName($docBlock, $object)));
+
+        if (static::isAsync($docBlock)) {
+            $data->setIsAsync();
+        }
+
         $data->setPrefix(static::getPrefix($docBlock));
         if (static::isModifying($docBlock)) {
             $data->setIsModifying();
@@ -315,16 +332,17 @@ abstract class AbstractRepository
      * @return DbResultInterface
      *
      * @throws Exceptions\DatabaseException
+     * @throws MemcachedCacheException
+     * @throws MemcachedOperationException
+     * @throws RedisCacheException
      * @throws RepositoryMethodArgsInvalidException
      * @throws RepositoryMethodNotFoundException
      * @throws \ReflectionException
      * @throws \Scaleplan\Data\Exceptions\DataException
      * @throws \Scaleplan\Data\Exceptions\DbConnectException
-     * @throws MemcachedCacheException
-     * @throws MemcachedOperationException
-     * @throws RedisCacheException
      * @throws \Scaleplan\Data\Exceptions\ValidationException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
+     * @throws \Scaleplan\Db\Exceptions\DbException
      * @throws \Scaleplan\Db\Exceptions\InvalidIsolationLevelException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      * @throws \Scaleplan\Db\Exceptions\QueryCountNotMatchParamsException
@@ -349,16 +367,17 @@ abstract class AbstractRepository
      * @return DbResultInterface
      *
      * @throws Exceptions\DatabaseException
+     * @throws MemcachedCacheException
+     * @throws MemcachedOperationException
+     * @throws RedisCacheException
      * @throws RepositoryMethodArgsInvalidException
      * @throws RepositoryMethodNotFoundException
      * @throws \ReflectionException
      * @throws \Scaleplan\Data\Exceptions\DataException
      * @throws \Scaleplan\Data\Exceptions\DbConnectException
-     * @throws MemcachedCacheException
-     * @throws MemcachedOperationException
-     * @throws RedisCacheException
      * @throws \Scaleplan\Data\Exceptions\ValidationException
      * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
+     * @throws \Scaleplan\Db\Exceptions\DbException
      * @throws \Scaleplan\Db\Exceptions\InvalidIsolationLevelException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
      * @throws \Scaleplan\Db\Exceptions\QueryCountNotMatchParamsException
