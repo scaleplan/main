@@ -271,6 +271,7 @@ trait ControllerTrait
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Scaleplan\Main\Exceptions\ViewNotFoundException
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
      */
     public function actionFullInfo(DTO $id) : ResultInterface

@@ -4,15 +4,15 @@ namespace Scaleplan\Main;
 
 use PhpQuery\PhpQueryObject;
 use Scaleplan\Access\Access;
-use function Scaleplan\DependencyInjection\get_required_container;
-use function Scaleplan\Helpers\get_env;
-use function Scaleplan\Helpers\get_required_env;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Interfaces\ViewInterface;
 use Scaleplan\Result\DbResult;
 use Scaleplan\Result\Interfaces\DbResultInterface;
 use Scaleplan\Templater\Templater;
+use function Scaleplan\DependencyInjection\get_required_container;
+use function Scaleplan\Helpers\get_env;
+use function Scaleplan\Helpers\get_required_env;
 
 /**
  * Представление
@@ -24,6 +24,8 @@ use Scaleplan\Templater\Templater;
 class View implements ViewInterface
 {
     public const ERROR_TEMPLATE_PATH = '/universal.html';
+    public const DATA_LABEL          = 'data';
+    public const OPTIONAL_LABEL      = 'is_optional';
 
     /**
      * Путь к файлу шаблона
@@ -141,10 +143,11 @@ class View implements ViewInterface
      *
      * @param DbResultInterface $data - данные
      * @param string $parentSelector - в элемент с каким селектором добавлять данные
+     * @param bool $isOptional - не выдавать
      */
-    public function addData(DbResultInterface $data, string $parentSelector = 'body') : void
+    public function addData(DbResultInterface $data, string $parentSelector = 'body', $isOptional = false) : void
     {
-        $this->data[$parentSelector] = $data;
+        $this->data[$parentSelector] = [static::DATA_LABEL => $data, static::OPTIONAL_LABEL => $isOptional,];
     }
 
     /**
@@ -187,7 +190,12 @@ class View implements ViewInterface
         }
 
         foreach ($this->data as $selector => $data) {
-            $page->setMultiData($data->getArrayResult(), $selector);
+            if ($data[static::OPTIONAL_LABEL]) {
+                $page->setOptionalMultiData($data[static::DATA_LABEL]->getArrayResult(), $selector);
+                continue;
+            }
+
+            $page->setMultiData($data[static::DATA_LABEL]->getArrayResult(), $selector);
         }
 
         return $template;
