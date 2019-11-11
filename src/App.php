@@ -230,9 +230,6 @@ class App
      *
      * @throws DatabaseException
      * @throws \ReflectionException
-     * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
-     * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
-     * @throws \Scaleplan\Db\Exceptions\QueryCountNotMatchParamsException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
      * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
