@@ -2,7 +2,6 @@
 
 namespace Scaleplan\Main;
 
-use App\Classes\App;
 use Scaleplan\Helpers\NameConverter;
 use Scaleplan\Http\Constants\ContentTypes;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
