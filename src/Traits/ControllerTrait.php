@@ -187,6 +187,7 @@ trait ControllerTrait
             throw new ControllerException('Репозиторий не найден.');
         }
 
+        /** @var DbResultInterface $result */
         $result = $repo->update($id->toSnakeArray() + $dto->toFullSnakeArray());
         if (!$result->getResult()) {
             throw new ControllerException(
@@ -211,6 +212,11 @@ trait ControllerTrait
     {
         /** @var AbstractController $this */
         $repo = $this->getRepository();
+        if (!$repo) {
+            throw new ControllerException('Репозиторий не найден.');
+        }
+
+        /** @var DbResultInterface $result */
         $result = $repo->delete($id);
         if (!$result->getResult()) {
             throw new ControllerException('Не удалось удалить объект.', HttpStatusCodes::HTTP_NOT_FOUND);
@@ -220,9 +226,7 @@ trait ControllerTrait
     }
 
     /**
-     * Сжатая информация о модели
-     *
-     * @param DTO $id - идентификатор модели
+     * @param DTO $id
      *
      * @return ResultInterface
      *
@@ -234,6 +238,7 @@ trait ControllerTrait
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Scaleplan\Main\Exceptions\ViewNotFoundException
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
      */
     public function actionInfo(DTO $id) : ResultInterface
@@ -244,6 +249,7 @@ trait ControllerTrait
             throw new ControllerException('Репозиторий не найден.');
         }
 
+        /** @var DbResultInterface $result */
         $result = $repo->getInfo($id);
         if (!$result->getResult()) {
             throw new ControllerException(
@@ -282,6 +288,7 @@ trait ControllerTrait
             throw new ControllerException('Репозиторий не найден.');
         }
 
+        /** @var DbResultInterface $result */
         $result = $repo->getFullInfo($id);
         if (!$result->getResult()) {
             throw new NotFoundException(

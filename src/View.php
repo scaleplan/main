@@ -227,4 +227,16 @@ class View implements ViewInterface
 
         return $view->render();
     }
+
+    /**
+     * @return string
+     *
+     * @throws \PhpQuery\Exceptions\PhpQueryException
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
+     */
+    public function __toString()
+    {
+        return (string) $this->render();
+    }
 }
