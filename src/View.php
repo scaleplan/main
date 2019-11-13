@@ -237,6 +237,6 @@ class View implements ViewInterface
      */
     public function __toString()
     {
-        return (string) $this->render();
+        return (string)$this->render();
     }
 }
