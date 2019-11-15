@@ -178,16 +178,15 @@ abstract class AbstractController
      */
     public static function getMethodUrl(string $methodName) : string
     {
-        $model = strtr(
-            substr(strrchr(static::class, "\\"), 1),
-            [
-                get_required_env(ConfigConstants::CONTROLLERS_POSTFIX)       => '',
-                get_required_env(ConfigConstants::CONTROLLERS_METHOD_PREFIX) => '',
-            ]
+        $model = str_replace(
+            get_required_env(ConfigConstants::CONTROLLERS_POSTFIX),
+            '',
+            substr(strrchr(static::class, "\\"), 1)
         );
+        $method = str_replace(get_required_env(ConfigConstants::CONTROLLERS_METHOD_PREFIX), '', $methodName);
 
         return
             '/' . NameConverter::camelCaseToKebabCase($model)
-            . '/' . NameConverter::camelCaseToKebabCase($methodName);
+            . '/' . NameConverter::camelCaseToKebabCase($method);
     }
 }

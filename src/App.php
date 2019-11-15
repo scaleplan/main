@@ -303,7 +303,8 @@ class App
     }
 
     /**
-     * @param null $role
+     * @param string|null $role
+     * @param string|null $filePath
      *
      * @return string
      *
@@ -315,15 +316,15 @@ class App
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
-    public static function getViewPath($role = null) : string
+    public static function getViewPath(string $role = null, string $filePath = null) : string
     {
         /** @var CurrentRequestInterface $request */
         $request = get_required_container(CurrentRequestInterface::class);
-        $url = explode('?', $request->getURL())[0];
+        $filePath = $filePath ?: explode('?', $request->getURL())[0];
         $pathsToCheck = [];
 
         if ($role) {
-            $pathArray = explode('/', $url);
+            $pathArray = explode('/', $filePath);
             $tplName = array_pop($pathArray);
             $fileDirectory = implode('/', $pathArray);
             $roleFilePath = "$fileDirectory/$role-$tplName";
@@ -345,17 +346,17 @@ class App
         }
 
         $pathsToCheck[] = getenv('VIEWS_CONFIG')
-            ? (include(get_required_env(ConfigConstants::BUNDLE_PATH) . getenv('VIEWS_CONFIG')))[$url] ?? null
+            ? (include(get_required_env(ConfigConstants::BUNDLE_PATH) . getenv('VIEWS_CONFIG')))[$filePath] ?? null
             : null;
 
         $pathsToCheck[] = get_required_env(ConfigConstants::PRIVATE_TEMPLATES_PATH)
                 . '/' . static::getLocale()
-                . $url
+                . $filePath
                 . '.html';
 
         $pathsToCheck[] = get_required_env(ConfigConstants::PUBLIC_TEMPLATES_PATH)
             . '/' . static::getLocale()
-            . $url
+            . $filePath
             . '.html';
 
         foreach ($pathsToCheck as $path) {
@@ -369,6 +370,6 @@ class App
             return $path;
         }
 
-        throw new ViewNotFoundException(null, $url);
+        throw new ViewNotFoundException(null, $filePath);
     }
 }
