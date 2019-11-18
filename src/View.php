@@ -66,9 +66,14 @@ class View implements ViewInterface
     protected $userRole;
 
     /**
+     * @var PhpQueryObject
+     */
+    protected $page;
+
+    /**
      * View constructor.
      *
-     * @param string $filePath - путь к файлу шаблона
+     * @param string|null $filePath - путь к файлу шаблона
      * @param array $settings - настройки шаблонизатора
      *
      * @throws \ReflectionException
@@ -78,7 +83,7 @@ class View implements ViewInterface
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
     public function __construct(
-        ?string $filePath,
+        string $filePath = null,
         array $settings = []
     )
     {
@@ -90,6 +95,22 @@ class View implements ViewInterface
         $this->settings['forbiddenSelectors']
             = $this->settings['forbiddenSelectors'] ?? $access->getForbiddenSelectors($currentRequest->getURL());
         $this->settings = $settings;
+    }
+
+    /**
+     * @return PhpQueryObject
+     */
+    public function getPage() : PhpQueryObject
+    {
+        return $this->page;
+    }
+
+    /**
+     * @param PhpQueryObject $page
+     */
+    public function setPage(PhpQueryObject $page) : void
+    {
+        $this->page = $page;
     }
 
     /**
@@ -180,25 +201,31 @@ class View implements ViewInterface
      */
     public function render() : PhpQueryObject
     {
-        $page = new Templater(static::getFullFilePath($this->filePath), $this->settings);
-        $page->setUserRole($this->userRole);
-        $page->removeForbidden();
-        $page->renderIncludes();
-        $template = $page->getTemplate();
+        if ($this->page) {
+            $template = new Templater(null, $this->settings);
+            $template->setTemplate($this->page);
+        } else {
+            $template = new Templater(static::getFullFilePath($this->filePath), $this->settings);
+        }
+
+        $template->setUserRole($this->userRole);
+        $template->removeForbidden();
+        $template->renderIncludes();
+        $page = $template->getTemplate();
         if ($this->title) {
-            $template->find('title')->text($this->title);
+            $page->find('title')->text($this->title);
         }
 
         foreach ($this->data as $selector => $data) {
             if ($data[static::OPTIONAL_LABEL]) {
-                $page->setOptionalMultiData($data[static::DATA_LABEL]->getArrayResult(), $selector);
+                $template->setOptionalMultiData($data[static::DATA_LABEL]->getArrayResult(), $selector);
                 continue;
             }
 
-            $page->setMultiData($data[static::DATA_LABEL]->getArrayResult(), $selector);
+            $template->setMultiData($data[static::DATA_LABEL]->getArrayResult(), $selector);
         }
 
-        return $template;
+        return $page;
     }
 
     /**

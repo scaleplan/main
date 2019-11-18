@@ -2,6 +2,7 @@
 
 namespace Scaleplan\Main;
 
+use Scaleplan\DTO\DTO;
 use Scaleplan\Helpers\NameConverter;
 use Scaleplan\Http\Constants\ContentTypes;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
@@ -171,12 +172,13 @@ abstract class AbstractController
 
     /**
      * @param string $methodName
+     * @param DTO|null $dto
      *
      * @return string
      *
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
-    public static function getMethodUrl(string $methodName) : string
+    public static function getMethodUrl(string $methodName, DTO $dto = null) : string
     {
         $model = str_replace(
             get_required_env(ConfigConstants::CONTROLLERS_POSTFIX),
@@ -184,9 +186,13 @@ abstract class AbstractController
             substr(strrchr(static::class, "\\"), 1)
         );
         $method = str_replace(get_required_env(ConfigConstants::CONTROLLERS_METHOD_PREFIX), '', $methodName);
+        $params = '';
+        if ($dto) {
+            $params = '?' . http_build_url($dto->toSnakeArray());
+        }
 
         return
             '/' . NameConverter::camelCaseToKebabCase($model)
-            . '/' . NameConverter::camelCaseToKebabCase($method);
+            . '/' . NameConverter::camelCaseToKebabCase($method) . $params;
     }
 }
