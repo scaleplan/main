@@ -188,7 +188,7 @@ abstract class AbstractController
         $method = str_replace(get_required_env(ConfigConstants::CONTROLLERS_METHOD_PREFIX), '', $methodName);
         $params = '';
         if ($dto) {
-            $params = '?' . http_build_url($dto->toSnakeArray());
+            $params = '?' . http_build_query($dto->toSnakeArray());
         }
 
         return
