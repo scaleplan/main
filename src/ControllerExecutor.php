@@ -242,9 +242,6 @@ class ControllerExecutor implements ControllerExecutorInterface
             /** @var UserInterface $user */
             $user = get_required_container(UserInterface::class);
             $this->response->redirectUnauthorizedUser($user);
-        } catch (\Throwable $e) {
-            $this->response->buildError($e);
-            //throw $e;
         }
 
         return $this->response;
