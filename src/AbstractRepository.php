@@ -9,7 +9,6 @@ use Scaleplan\Cache\Exceptions\RedisCacheException;
 use Scaleplan\Data\Data;
 use Scaleplan\Data\Interfaces\DataInterface;
 use Scaleplan\DTO\DTO;
-use Scaleplan\Helpers\ArrayHelper;
 use Scaleplan\Helpers\Helper;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Exceptions\RepositoryMethodArgsInvalidException;
@@ -270,7 +269,7 @@ abstract class AbstractRepository
 //            throw new RepositoryMethodArgsInvalidException(null, $propertyName);
 //        }
 
-        if ($params && \is_array($params[0]) && !ArrayHelper::isAccos($params[0])) {
+        if ($params && !is_array($params[0]) && !($params[0] instanceof DTO)) {
             throw new RepositoryMethodArgsInvalidException(null, $propertyName);
         }
 
@@ -332,7 +331,6 @@ abstract class AbstractRepository
      * @throws \Scaleplan\Data\Exceptions\DataException
      * @throws \Scaleplan\Data\Exceptions\DbConnectException
      * @throws \Scaleplan\Data\Exceptions\ValidationException
-     * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
      * @throws \Scaleplan\Db\Exceptions\DbException
      * @throws \Scaleplan\Db\Exceptions\InvalidIsolationLevelException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
@@ -367,7 +365,6 @@ abstract class AbstractRepository
      * @throws \Scaleplan\Data\Exceptions\DataException
      * @throws \Scaleplan\Data\Exceptions\DbConnectException
      * @throws \Scaleplan\Data\Exceptions\ValidationException
-     * @throws \Scaleplan\Db\Exceptions\ConnectionStringException
      * @throws \Scaleplan\Db\Exceptions\DbException
      * @throws \Scaleplan\Db\Exceptions\InvalidIsolationLevelException
      * @throws \Scaleplan\Db\Exceptions\PDOConnectionException

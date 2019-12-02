@@ -15,63 +15,70 @@ use Scaleplan\Result\Interfaces\DbResultInterface;
  * @method DbResultInterface put(array|DTO $data)
  * @method DbResultInterface update(array|DTO $data)
  * @method DbResultInterface delete(array|DTO $data)
- * @method DbResultInterface activate(array|DTO $data)
- * @method DbResultInterface deactivate(array|DTO $data)
+ * @method DbResultInterface getAccessList(array|DTO $data)
+ * @method DbResultInterface count()
  */
 trait RepositoryTrait
 {
     /**
-     * @dbName $current
+     * RepositoryTrait constructor.
      */
-    public static $getInfo =
-        'SELECT *'
-        . ' FROM ' . self::TABLE
-        . ' WHERE id = :id';
+    public function __construct()
+    {
+        foreach (['getInfo', 'getList', 'put', 'update', 'delete', 'getAccessList', 'count',] as $propertyName) {
+            $this->$propertyName = str_replace(':table', static::TABLE, $this->$propertyName);
+        }
+    }
 
     /**
      * @dbName $current
      */
-    public static $getList =
+    public $getInfo =
+        'SELECT * FROM :table WHERE id = :id';
+
+    /**
+     * @dbName $current
+     */
+    public $getList =
         '[(SELECT id, name
-            FROM ' . self::TABLE
-        . ' WHERE id = :id)
-            UNION]
+           FROM :table
+           WHERE id = :id)
+           UNION]
           (SELECT id, name
-            FROM ' . self::TABLE
-        . ' WHERE 1 = 1
-             [AND id != :id]
-           [LIMIT :limit]
-           [OFFSET :offset])';
+           FROM :table
+           WHERE 1 = 1
+            [AND id != :id]
+          [LIMIT :limit]
+          [OFFSET :offset])';
 
     /**
      * @dbName $current
      */
-    public static $put =
-        'INSERT INTO ' . self::TABLE
-        . '   ([fields])'
-        . ' VALUES [expression]'
-        . ' RETURNING *';
+    public $put =
+        'INSERT INTO :table([fields])
+         VALUES [expression]
+         RETURNING *';
 
     /**
      * @dbName $current
      */
-    public static $update =
-        'UPDATE ' . self::TABLE
-        . ' SET [expression:not(id)]'
-        . ' WHERE id = :id'
-        . ' RETURNING *';
+    public $update =
+        'UPDATE :table
+         SET [expression]
+         WHERE id = :id
+         RETURNING *';
 
     /**
      * @dbName $current
      */
-    public static $delete =
-        'DELETE FROM ' . self::TABLE
-        . ' WHERE id = :id';
+    public $delete =
+        'DELETE FROM :table
+         WHERE id = :id';
 
     /**
      * @dbName $current
      */
-    public static $getAccessList =
+    public $getAccessList =
                        "WITH r AS (SELECT
                          (CASE WHEN rr.is_allow THEN rr.ids END) allow,
                          (CASE WHEN NOT rr.is_allow THEN rr.ids END) deny,
@@ -85,7 +92,7 @@ trait RepositoryTrait
                           AND url.text = :url
                           AND rr.is_allow
                           AND url.field = 'id'),
-                        
+
                         u AS (SELECT
                          (CASE WHEN ur.is_allow THEN ur.ids END) allow,
                          (CASE WHEN NOT ur.is_allow THEN ur.ids END) deny,
@@ -98,29 +105,29 @@ trait RepositoryTrait
                           AND url.text = :url
                           AND ur.is_allow
                           AND url.field = 'id'),
-                        
+
                         c AS (SELECT
-                         (CASE 
+                         (CASE
                             WHEN u.deny | COALESCE(r.deny, ARRAY[]::int4[]) IS NULL
                             THEN u.allow | COALESCE(r.allow, ARRAY[]::int4[])
                             ELSE (u.deny | COALESCE(r.deny, ARRAY[]::int4[])) - COALESCE(u.allow | COALESCE(r.allow, ARRAY[]::int4[]), ARRAY[]::int4[])
                           END) ids,
-                         (CASE 
+                         (CASE
                             WHEN u.deny | COALESCE(r.deny, ARRAY[]::int4[]) IS NULL
                             THEN COALESCE(u.is_allow, r.is_allow)
                             ELSE false
                           END) is_allow
                         FROM r FULL JOIN u USING(field, text))
-                        
+
                         SELECT id, name
-                        FROM " . self::TABLE . ', c
+                        FROM :table, c
                         WHERE (c.is_allow AND (c.ids IS NULL OR id::int4 = ANY(c.ids)))
                           OR (NOT c.is_allow AND c.ids IS NOT NULL AND id::int4 != ALL(c.ids))
                        [LIMIT :limit]
-                       [OFFSET :offset]';
+                       [OFFSET :offset]";
 
     /**
      * @dbName $current
      */
-    public static $count = 'SELECT count(id) FROM ' . self::TABLE;
+    public $count = 'SELECT count(id) FROM :table';
 }
