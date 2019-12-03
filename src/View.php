@@ -92,8 +92,11 @@ class View implements ViewInterface
         $currentRequest = get_required_container(CurrentRequestInterface::class);
         /** @var Access $access */
         $access = get_required_container(Access::class);
-        $this->settings['forbiddenSelectors']
-            = $this->settings['forbiddenSelectors'] ?? $access->getForbiddenSelectors($currentRequest->getURL());
+        if (empty($settings['forbiddenSelectors'])) {
+            $settings['forbiddenSelectors']
+                = $access->getForbiddenSelectors(substr($currentRequest->getURL(), 1), $currentRequest->getParams());
+        }
+
         $this->settings = $settings;
     }
 
