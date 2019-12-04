@@ -210,6 +210,7 @@ class ControllerExecutor implements ControllerExecutorInterface
      */
     public function execute() : CurrentResponse
     {
+//        $start = microtime(true);
         try {
             [$controllerName, $methodName] = $this->convertURLToControllerMethod();
 
@@ -234,6 +235,10 @@ class ControllerExecutor implements ControllerExecutorInterface
 
             $this->response->setPayload($result);
             $this->response->send();
+//            $time = microtime(true) - $start;
+//            if ($time > 0.5) {
+//                throw new \Exception('Request is too slow: ' . $time);
+//            }
         } catch (AuthException $e) {
             if ($this->request->getAccept() === ContentTypes::JSON) {
                 $this->response->buildError($e);
