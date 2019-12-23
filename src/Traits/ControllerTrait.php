@@ -159,7 +159,7 @@ trait ControllerTrait
                 throw new ControllerException('Не удалось создать объект.');
             }
         } catch (\PDOException $e) {
-            if ($e->getCode() === Db::DUPLICATE_ERROR_CODE) {
+            if (in_array($e->getCode(), Db::DUPLICATE_ERROR_CODES, false)) {
                 throw new ControllerException('Такая сущность уже есть в системе.', HttpStatusCodes::HTTP_CONFLICT);
             }
 

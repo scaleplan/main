@@ -17,7 +17,6 @@ use Scaleplan\Result\Interfaces\DbResultInterface;
 use function Scaleplan\DependencyInjection\get_required_container;
 use function Scaleplan\DependencyInjection\get_static_container;
 use function Scaleplan\Event\dispatch;
-use function Scaleplan\Event\dispatch_async;
 use function Scaleplan\Helpers\get_required_env;
 
 /**
@@ -189,7 +188,7 @@ abstract class AbstractRepository
 
         foreach ($tags as $tag) {
             $eventClass = trim($tag->getDescription());
-            dispatch_async($eventClass, ['data' => $data]);
+            dispatch($eventClass, ['data' => $data]);
         }
     }
 
