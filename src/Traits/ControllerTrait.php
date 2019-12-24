@@ -2,13 +2,11 @@
 
 namespace Scaleplan\Main\Traits;
 
-use Scaleplan\Db\Db;
-use function Scaleplan\DependencyInjection\get_required_container;
+use Scaleplan\Db\PgDb;
 use Scaleplan\DTO\DTO;
 use Scaleplan\DTO\Exceptions\PropertyNotFoundException;
 use Scaleplan\Form\Form;
 use Scaleplan\Form\Interfaces\FormInterface;
-use function Scaleplan\Helpers\get_required_env;
 use Scaleplan\Http\Exceptions\NotFoundException;
 use Scaleplan\HttpStatus\HttpStatusCodes;
 use Scaleplan\Main\AbstractController;
@@ -18,6 +16,8 @@ use Scaleplan\Result\Interfaces\DbResultInterface;
 use Scaleplan\Result\Interfaces\HTMLResultInterface;
 use Scaleplan\Result\Interfaces\ResultInterface;
 use Symfony\Component\Yaml\Yaml;
+use function Scaleplan\DependencyInjection\get_required_container;
+use function Scaleplan\Helpers\get_required_env;
 
 /**
  * Trait ControllerTrait
@@ -159,7 +159,7 @@ trait ControllerTrait
                 throw new ControllerException('Не удалось создать объект.');
             }
         } catch (\PDOException $e) {
-            if (in_array($e->getCode(), Db::DUPLICATE_ERROR_CODES, false)) {
+            if (in_array($e->getCode(), PgDb::DUPLICATE_ERROR_CODES, false)) {
                 throw new ControllerException('Такая сущность уже есть в системе.', HttpStatusCodes::HTTP_CONFLICT);
             }
 
