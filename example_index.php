@@ -20,18 +20,19 @@ use function Scaleplan\Helpers\get_required_env;
 
 /**
  * @throws ReflectionException
- * @throws \Dotenv\Exception\InvalidFileException
- * @throws \Dotenv\Exception\InvalidPathException
+ * @throws SodiumException
  * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
  * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
  * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
  * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
+ * @throws \Scaleplan\Event\Exceptions\ClassNotImplementsEventInterfaceException
  * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+ * @throws \Scaleplan\Helpers\Exceptions\HelperException
  * @throws \Scaleplan\Main\Exceptions\InvalidHostException
  */
 function init()
 {
-    $dotEnv = Dotenv\Dotenv::create(__DIR__);
+    $dotEnv = Dotenv\Dotenv::createImmutable(__DIR__);
     $dotEnv->load();
 
     session_name(get_required_env('PROJECT_NAME'));
@@ -52,17 +53,17 @@ function init()
 }
 
 /**
- * @param \Throwable $e
+ * @param Throwable $e
  *
  * @throws ReflectionException
- * @throws \Throwable
+ * @throws Throwable
  * @throws \Scaleplan\Db\Exceptions\PDOConnectionException
  * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
  * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
  * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
  * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
  */
-function error(\Throwable $e)
+function error(Throwable $e)
 {
     Helper::allDBRollback(App::getDatabases());
     /** @var AccessToFiles $af */
@@ -78,6 +79,6 @@ try {
     /** @var \Scaleplan\Main\ControllerExecutor $executor */
     $executor = get_required_container(ControllerExecutorInterface::class);
     $executor->execute();
-} catch (\Throwable $e) {
+} catch (Throwable $e) {
     error($e);
 }
