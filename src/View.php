@@ -8,6 +8,7 @@ use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Interfaces\ViewInterface;
 use Scaleplan\Result\DbResult;
+use Scaleplan\Result\Interfaces\ArrayResultInterface;
 use Scaleplan\Result\Interfaces\DbResultInterface;
 use Scaleplan\Templater\Templater;
 use function Scaleplan\DependencyInjection\get_required_container;
@@ -165,11 +166,11 @@ class View implements ViewInterface
     /**
      * Добавить данные для добавления на страницу
      *
-     * @param DbResultInterface $data - данные
+     * @param ArrayResultInterface $data - данные
      * @param string $parentSelector - в элемент с каким селектором добавлять данные
      * @param bool $isOptional - не выдавать
      */
-    public function addData(DbResultInterface $data, string $parentSelector = 'body', $isOptional = false) : void
+    public function addData(ArrayResultInterface $data, string $parentSelector = 'body', $isOptional = false) : void
     {
         $this->data[$parentSelector] = [static::DATA_LABEL => $data, static::OPTIONAL_LABEL => $isOptional,];
     }

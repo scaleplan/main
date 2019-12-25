@@ -73,10 +73,10 @@ abstract class AbstractRepository
         switch ($dbName) {
             case '$current':
                 if ($object) {
-                    return $object->currentDbName ?: Helper::getSubdomain();
+                    return $object->currentDbName ?: App::getSubdomain();
                 }
 
-                return Helper::getSubdomain();
+                return App::getSubdomain();
 
             default:
                 return $dbName;
