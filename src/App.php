@@ -350,9 +350,9 @@ class App
             : null;
 
         $pathsToCheck[] = get_required_env(ConfigConstants::PRIVATE_TEMPLATES_PATH)
-                . '/' . static::getLocale()
-                . $filePath
-                . '.html';
+            . '/' . static::getLocale()
+            . $filePath
+            . '.html';
 
         $pathsToCheck[] = get_required_env(ConfigConstants::PUBLIC_TEMPLATES_PATH)
             . '/' . static::getLocale()
@@ -371,5 +371,25 @@ class App
         }
 
         throw new ViewNotFoundException(null, $filePath);
+    }
+
+    /**
+     * @return string
+     *
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Scaleplan\Helpers\Exceptions\HelperException
+     */
+    public static function getSubdomain() : string
+    {
+        $subdomain = Helper::getSubdomain();
+        $disableSubdomains = array_map('trim', explode(',', (string)getenv('DISABLED_SUBDOMAINS')));
+        $subdomainArray = explode('.', $subdomain);
+        foreach ($subdomainArray as $index => $part) {
+            if (in_array($part, $disableSubdomains, true)) {
+                unset($subdomainArray[$index]);
+            }
+        }
+
+        return implode('.', $subdomainArray);
     }
 }

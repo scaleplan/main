@@ -3,7 +3,7 @@
 namespace Scaleplan\Main\Interfaces;
 
 use PhpQuery\PhpQueryObject;
-use Scaleplan\Result\Interfaces\DbResultInterface;
+use Scaleplan\Result\Interfaces\ArrayResultInterface;
 
 /**
  * Interface ViewInterface
@@ -29,10 +29,10 @@ interface ViewInterface
     /**
      * Добавить данные для добавления на страницу
      *
-     * @param DbResultInterface $data - данные
+     * @param ArrayResultInterface $data - данные
      * @param string $parentSelector - в элемент с каким селектором добавлять данные
      */
-    public function addData(DbResultInterface $data, string $parentSelector = 'body') : void;
+    public function addData(ArrayResultInterface $data, string $parentSelector = 'body') : void;
 
     /**
      * Удалить данные для добавления на страницу

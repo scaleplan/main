@@ -17,7 +17,6 @@ use Scaleplan\Result\Interfaces\DbResultInterface;
 use function Scaleplan\DependencyInjection\get_required_container;
 use function Scaleplan\DependencyInjection\get_static_container;
 use function Scaleplan\Event\dispatch;
-use function Scaleplan\Event\dispatch_async;
 use function Scaleplan\Helpers\get_required_env;
 
 /**
@@ -61,6 +60,7 @@ abstract class AbstractRepository
      * @return string
      *
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Scaleplan\Helpers\Exceptions\HelperException
      */
     public static function getDbName(DocBlock $docBlock, ?self $object) : string
     {
@@ -74,10 +74,10 @@ abstract class AbstractRepository
         switch ($dbName) {
             case '$current':
                 if ($object) {
-                    return $object->currentDbName ?: Helper::getSubdomain();
+                    return $object->currentDbName ?: App::getSubdomain();
                 }
 
-                return Helper::getSubdomain();
+                return App::getSubdomain();
 
             default:
                 return $dbName;
@@ -189,7 +189,7 @@ abstract class AbstractRepository
 
         foreach ($tags as $tag) {
             $eventClass = trim($tag->getDescription());
-            dispatch_async($eventClass, ['data' => $data]);
+            dispatch($eventClass, ['data' => $data]);
         }
     }
 
@@ -257,6 +257,7 @@ abstract class AbstractRepository
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Event\Exceptions\ClassNotImplementsEventInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Scaleplan\Helpers\Exceptions\HelperException
      * @throws \Scaleplan\Result\Exceptions\ResultException
      */
     public static function invoke(
@@ -342,6 +343,7 @@ abstract class AbstractRepository
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Event\Exceptions\ClassNotImplementsEventInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Scaleplan\Helpers\Exceptions\HelperException
      * @throws \Scaleplan\Result\Exceptions\ResultException
      */
     public static function __callStatic(string $propertyName, array $data) : DbResultInterface
@@ -376,6 +378,7 @@ abstract class AbstractRepository
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Event\Exceptions\ClassNotImplementsEventInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Scaleplan\Helpers\Exceptions\HelperException
      * @throws \Scaleplan\Result\Exceptions\ResultException
      */
     public function __call(string $propertyName, array $data) : DbResultInterface
