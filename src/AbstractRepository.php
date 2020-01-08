@@ -60,6 +60,7 @@ abstract class AbstractRepository
      * @return string
      *
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Scaleplan\Helpers\Exceptions\HelperException
      */
     public static function getDbName(DocBlock $docBlock, ?self $object) : string
     {
@@ -256,6 +257,7 @@ abstract class AbstractRepository
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Event\Exceptions\ClassNotImplementsEventInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Scaleplan\Helpers\Exceptions\HelperException
      * @throws \Scaleplan\Result\Exceptions\ResultException
      */
     public static function invoke(
@@ -341,6 +343,7 @@ abstract class AbstractRepository
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Event\Exceptions\ClassNotImplementsEventInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Scaleplan\Helpers\Exceptions\HelperException
      * @throws \Scaleplan\Result\Exceptions\ResultException
      */
     public static function __callStatic(string $propertyName, array $data) : DbResultInterface
@@ -375,6 +378,7 @@ abstract class AbstractRepository
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Event\Exceptions\ClassNotImplementsEventInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Scaleplan\Helpers\Exceptions\HelperException
      * @throws \Scaleplan\Result\Exceptions\ResultException
      */
     public function __call(string $propertyName, array $data) : DbResultInterface
