@@ -224,7 +224,7 @@ class App
     /**
      * Подкючиться к базе данных (если подключения еще нет) и вернуть объект подключения
      *
-     * @param string $name - имя базы данных
+     * @param string|null $name - имя базы данных
      *
      * @return DbInterface
      *
@@ -243,7 +243,7 @@ class App
         }
 
         if (\in_array($name, static::$denyDatabases, true)) {
-            throw new DatabaseException("Подключение к базе данных $name не разрешено");
+            throw new DatabaseException("Подключение к базе данных '$name' не разрешено");
         }
 
         if (!empty(static::$databases[$name])) {
@@ -268,15 +268,15 @@ class App
         }
 
         if (empty($db['DNS'])) {
-            throw new DatabaseException('В данных о подключении к БД не хватает строки подключения');
+            throw new DatabaseException("В данных о подключении к БД '$name' не хватает строки подключения");
         }
 
         if (empty($db['USER'])) {
-            throw new DatabaseException('В данных о подключении к БД не хватает имени пользователя БД');
+            throw new DatabaseException("В данных о подключении к БД '$name' не хватает имени пользователя БД");
         }
 
         if (empty($db['PASSWORD'])) {
-            throw new DatabaseException('В данных о подключении к БД не хватает пароля пользователя БД');
+            throw new DatabaseException("В данных о подключении к БД '$name' не хватает пароля пользователя БД");
         }
 
         /** @var DbInterface $dbConnect */
