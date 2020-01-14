@@ -83,16 +83,17 @@ class ControllerExecutor implements ControllerExecutorInterface
         $this->request = $request ?? get_required_container(CurrentRequestInterface::class);
         $this->response = $this->request->getResponse();
         $this->user = $user ?? get_required_container(UserInterface::class);
+        $this->logger = get_required_container(LoggerInterface::class);
         if (!$cache) {
             /** @var Data $cache */
             $cache = get_required_container(CacheInterface::class, [$this->request->getURL(), $this->request->getParams()]);
             try {
                 $cache->setVerifyingFilePath(View::getFullFilePath(App::getViewPath()));
             } catch (ViewNotFoundException $e) {
+                //$this->logger->error($e->getMessage());
             }
         }
         $this->cache = $cache;
-        $this->logger = get_required_container(LoggerInterface::class);
     }
 
     /**
