@@ -166,9 +166,9 @@ class App
         static::$timeZone = new \DateTimeZone($timeZoneName);
 
         static::$locale = get_required_env('DEFAULT_LANG');
-        if (!empty($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
-            static::$locale = locale_accept_from_http($_SERVER['HTTP_ACCEPT_LANGUAGE']);
-        }
+//        if (!empty($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+//            static::$locale = locale_accept_from_http($_SERVER['HTTP_ACCEPT_LANGUAGE']);
+//        }
         setlocale(LC_ALL, static::$locale);
 
         date_default_timezone_set(static::$timeZone->getName());
