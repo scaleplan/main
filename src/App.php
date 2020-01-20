@@ -26,6 +26,7 @@ use function Scaleplan\Helpers\get_required_env;
 class App
 {
     public const CACHE_PERSISTENT_ID = 125437;
+    public const SESSION_CURRENCY_CODE_LABEL = 'currencyCode';
 
     /**
      * Базы данных, подключение к которым запрещено
@@ -62,6 +63,11 @@ class App
      * @var string
      */
     protected static $host;
+
+    /**
+     * @var string
+     */
+    protected static $currencyCode;
 
     /**
      * Данные для подключение к кэшу
@@ -172,6 +178,11 @@ class App
         setlocale(LC_ALL, static::$locale);
 
         date_default_timezone_set(static::$timeZone->getName());
+
+        static::$currencyCode = $_SESSION[static::SESSION_CURRENCY_CODE_LABEL] ?? \NumberFormatter::create(
+            \App\Classes\App::getLocale(),
+            \NumberFormatter::CURRENCY
+        )->getTextAttribute(\NumberFormatter::CURRENCY_CODE);
     }
 
     /**
@@ -391,5 +402,22 @@ class App
         }
 
         return implode('.', $subdomainArray);
+    }
+
+    /**
+     * @return string
+     */
+    public static function getCurrencyCode() : string
+    {
+        return self::$currencyCode;
+    }
+
+    /**
+     * @param string $currencyCode
+     */
+    public static function setCurrencyCode(string $currencyCode) : void
+    {
+        $_SESSION[static::SESSION_CURRENCY_CODE_LABEL] = $currencyCode;
+        self::$currencyCode = $currencyCode;
     }
 }

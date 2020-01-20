@@ -8,8 +8,8 @@ use Scaleplan\Cache\Exceptions\MemcachedOperationException;
 use Scaleplan\Cache\Exceptions\RedisCacheException;
 use Scaleplan\Data\Data;
 use Scaleplan\Data\Interfaces\DataInterface;
+use Scaleplan\Db\PgDb;
 use Scaleplan\DTO\DTO;
-use Scaleplan\Helpers\Helper;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Exceptions\RepositoryMethodArgsInvalidException;
 use Scaleplan\Main\Exceptions\RepositoryMethodNotFoundException;
@@ -37,6 +37,7 @@ abstract class AbstractRepository
     public const EVENT_TAG       = 'event';
     public const ASYNC_EVENT_TAG = 'asyncEvent';
     public const ASYNC_TAG       = 'async';
+    public const DEFERRED        = 'deferred';
 
     /**
      * @var string
@@ -109,6 +110,16 @@ abstract class AbstractRepository
     public static function isModifying(DocBlock $docBlock) : bool
     {
         return (bool)$docBlock->getTagsByName(static::MODIFYING_TAG);
+    }
+
+    /**
+     * @param DocBlock $docBlock
+     *
+     * @return bool
+     */
+    public static function isDeferred(DocBlock $docBlock) : bool
+    {
+        return (bool)$docBlock->getTagsByName(static::DEFERRED);
     }
 
     /**
@@ -292,7 +303,12 @@ abstract class AbstractRepository
         $app = get_static_container(App::class);
         /** @var Data $data */
         $data = get_required_container(DataInterface::class, [$sql, $params]);
-        $data->setDbConnect($app::getDB(static::getDbName($docBlock, $object)));
+        $db = $app::getDB(static::getDbName($docBlock, $object));
+        if ($db instanceof PgDb && static::isDeferred($docBlock)) {
+            $db->setTransactionDeferred(true);
+        }
+
+        $data->setDbConnect($db);
 
         if (static::isAsync($docBlock)) {
             $data->setIsAsync();
