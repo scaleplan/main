@@ -180,7 +180,7 @@ class App
         date_default_timezone_set(static::$timeZone->getName());
 
         static::$currencyCode = $_SESSION[static::SESSION_CURRENCY_CODE_LABEL] ?? \NumberFormatter::create(
-            \App\Classes\App::getLocale(),
+            static::getLocale(),
             \NumberFormatter::CURRENCY
         )->getTextAttribute(\NumberFormatter::CURRENCY_CODE);
     }
