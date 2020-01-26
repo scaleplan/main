@@ -72,6 +72,11 @@ class View implements ViewInterface
     protected $page;
 
     /**
+     * @var Templater
+     */
+    protected $template;
+
+    /**
      * View constructor.
      *
      * @param string|null $filePath - путь к файлу шаблона
@@ -194,6 +199,33 @@ class View implements ViewInterface
     }
 
     /**
+     * @return Templater
+     *
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     */
+    public function getTemplate() : Templater
+    {
+        if (!$this->template) {
+            if ($this->page) {
+                $this->template = new Templater(null, $this->settings);
+                $this->template->setTemplate($this->page);
+            } else {
+                $this->template = new Templater(static::getFullFilePath($this->filePath), $this->settings);
+            }
+        }
+
+        return $this->template;
+    }
+
+    /**
+     * @param Templater $template
+     */
+    public function setTemplate(Templater $template) : void
+    {
+        $this->template = $template;
+    }
+
+    /**
      * Отрендерить страницу
      *
      * @return PhpQueryObject
@@ -205,12 +237,7 @@ class View implements ViewInterface
      */
     public function render() : PhpQueryObject
     {
-        if ($this->page) {
-            $template = new Templater(null, $this->settings);
-            $template->setTemplate($this->page);
-        } else {
-            $template = new Templater(static::getFullFilePath($this->filePath), $this->settings);
-        }
+        $template = $this->getTemplate();
 
         $template->setUserRole($this->userRole);
         $template->removeForbidden();
