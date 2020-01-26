@@ -173,7 +173,7 @@ class App
 
         static::$locale = get_required_env('DEFAULT_LANG');
 //        if (!empty($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
-//            static::$locale = locale_accept_from_http($_SERVER['HTTP_ACCEPT_LANGUAGE']);
+//            static::$locale = Locale::acceptFromHttp($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null);
 //        }
         setlocale(LC_ALL, static::$locale);
 
