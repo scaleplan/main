@@ -195,11 +195,11 @@ class ControllerExecutor implements ControllerExecutorInterface
      */
     protected function getCacheValue(\ReflectionMethod $refMethod) : ?string
     {
-        if (!$this->cache || !$this->user) {
+        if (!$this->cache || !$this->user || !($tags = static::getMethodTags($refMethod))) {
             return null;
         }
 
-        $this->cache->setTags(static::getMethodTags($refMethod));
+        $this->cache->setTags($tags);
         $this->cache->setParams($this->request->getParams() + $this->request->getCacheAdditionalParams());
         return $this->cache->getHtml($this->user->getId())->getResult();
     }
