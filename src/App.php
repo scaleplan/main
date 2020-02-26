@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Scaleplan\Main;
 
@@ -25,7 +26,7 @@ use function Scaleplan\Helpers\get_required_env;
  */
 class App
 {
-    public const CACHE_PERSISTENT_ID = 125437;
+    public const CACHE_PERSISTENT_ID         = 125437;
     public const SESSION_CURRENCY_CODE_LABEL = 'currencyCode';
 
     /**
@@ -180,9 +181,9 @@ class App
         date_default_timezone_set(static::$timeZone->getName());
 
         static::$currencyCode = $_SESSION[static::SESSION_CURRENCY_CODE_LABEL] ?? \NumberFormatter::create(
-            static::getLocale(),
-            \NumberFormatter::CURRENCY
-        )->getTextAttribute(\NumberFormatter::CURRENCY_CODE);
+                static::getLocale(),
+                \NumberFormatter::CURRENCY
+            )->getTextAttribute(\NumberFormatter::CURRENCY_CODE);
     }
 
     /**
@@ -392,16 +393,21 @@ class App
      */
     public static function getSubdomain() : string
     {
-        $subdomain = Helper::getSubdomain();
-        $disableSubdomains = array_map('trim', explode(',', (string)getenv('DISABLED_SUBDOMAINS')));
-        $subdomainArray = explode('.', $subdomain);
-        foreach ($subdomainArray as $index => $part) {
-            if (in_array($part, $disableSubdomains, true)) {
-                unset($subdomainArray[$index]);
+        static $subdomain;
+        if (null === $subdomain) {
+            $subdomain = Helper::getSubdomain();
+            $disableSubdomains = array_map('trim', explode(',', (string)getenv('DISABLED_SUBDOMAINS')));
+            $subdomainArray = explode('.', $subdomain);
+            foreach ($subdomainArray as $index => $part) {
+                if (in_array($part, $disableSubdomains, true)) {
+                    unset($subdomainArray[$index]);
+                }
             }
+
+            $subdomain = implode('.', $subdomainArray);
         }
 
-        return implode('.', $subdomainArray);
+        return $subdomain;
     }
 
     /**
