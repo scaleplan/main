@@ -226,7 +226,7 @@ trait ControllerTrait
     }
 
     /**
-     * @param DTO $id
+     * @param DTO $dto
      *
      * @return ResultInterface
      *
@@ -241,7 +241,7 @@ trait ControllerTrait
      * @throws \Scaleplan\Main\Exceptions\ViewNotFoundException
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
      */
-    public function actionInfo(DTO $id) : ResultInterface
+    public function actionInfo(DTO $dto) : ResultInterface
     {
         /** @var AbstractController $this */
         $repo = $this->getRepository();
@@ -250,10 +250,10 @@ trait ControllerTrait
         }
 
         /** @var DbResultInterface $result */
-        $result = $repo->getInfo($id);
+        $result = $repo->getInfo($dto);
         if (!$result->getResult()) {
             throw new ControllerException(
-                'Объект с таким идентификатором не существует.',
+                'Объект по таким условиям не существует.',
                 HttpStatusCodes::HTTP_NOT_FOUND
             );
         }

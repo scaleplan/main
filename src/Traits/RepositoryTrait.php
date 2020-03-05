@@ -73,7 +73,8 @@ trait RepositoryTrait
      */
     public $delete =
         'DELETE FROM :table
-         WHERE id = :id';
+         WHERE id = :id
+         RETURNING *';
 
     /**
      * @dbName $current
