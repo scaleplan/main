@@ -59,6 +59,11 @@ class ControllerExecutor implements ControllerExecutorInterface
     protected $defaultControllerPath = 'default';
 
     /**
+     * @var bool
+     */
+    protected $checkAccess = true;
+
+    /**
      * ControllerExecutor constructor.
      *
      * @param UserInterface|null $user
@@ -94,6 +99,22 @@ class ControllerExecutor implements ControllerExecutorInterface
             }
         }
         $this->cache = $cache;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCheckAccess() : bool
+    {
+        return $this->checkAccess;
+    }
+
+    /**
+     * @param bool $checkAccess
+     */
+    public function setCheckAccess(bool $checkAccess) : void
+    {
+        $this->checkAccess = $checkAccess;
     }
 
     /**
@@ -217,6 +238,7 @@ class ControllerExecutor implements ControllerExecutorInterface
 
             $access = get_required_container(Access::class);
             $accessControllerParent = new AccessControllerParent($access);
+            $accessControllerParent->setCheckMethod($this->checkAccess);
             [$refClass, $refMethod, $args] = $accessControllerParent->checkControllerMethod(
                 $controllerName,
                 $methodName,
