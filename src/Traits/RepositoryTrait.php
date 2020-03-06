@@ -57,7 +57,7 @@ trait RepositoryTrait
     public $put =
         'INSERT INTO :table([fields])
          VALUES [expression]
-         RETURNING *';
+         RETURNING id, [fields]';
 
     /**
      * @dbName $current
@@ -66,7 +66,7 @@ trait RepositoryTrait
         'UPDATE :table
          SET [expression]
          WHERE id = :id
-         RETURNING *';
+         RETURNING [fields]';
 
     /**
      * @dbName $current
@@ -74,7 +74,7 @@ trait RepositoryTrait
     public $delete =
         'DELETE FROM :table
          WHERE id = :id
-         RETURNING *';
+         RETURNING id';
 
     /**
      * @dbName $current
