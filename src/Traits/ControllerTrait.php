@@ -317,7 +317,12 @@ trait ControllerTrait
             throw new ControllerException('Репозиторий не найден.');
         }
 
-        $result = $repo->getList($dto->toFullSnakeArray());
+        $data = $dto->toFullSnakeArray();
+        if (array_key_exists('id', $data) && $data['id'] === null) {
+            unset($data['id']);
+        }
+
+        $result = $repo->getList($data);
 
         return $this->formatResponse($result);
     }
