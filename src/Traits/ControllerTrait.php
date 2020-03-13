@@ -160,7 +160,11 @@ trait ControllerTrait
             }
         } catch (\PDOException $e) {
             if (in_array($e->getCode(), PgDb::DUPLICATE_ERROR_CODES, false)) {
-                throw new ControllerException('Такая сущность уже есть в системе.', HttpStatusCodes::HTTP_CONFLICT);
+                throw new ControllerException(
+                    'Такая сущность уже есть в системе.',
+                    null,
+                    HttpStatusCodes::HTTP_CONFLICT
+                );
             }
 
             throw $e;
@@ -192,6 +196,7 @@ trait ControllerTrait
         if (!$result->getResult()) {
             throw new ControllerException(
                 'Не удалось изменить объект. Возможно, объект не существует.',
+                null,
                 HttpStatusCodes::HTTP_NOT_FOUND
             );
         }
@@ -219,7 +224,7 @@ trait ControllerTrait
         /** @var DbResultInterface $result */
         $result = $repo->delete($id);
         if (!$result->getResult()) {
-            throw new ControllerException('Не удалось удалить объект.', HttpStatusCodes::HTTP_NOT_FOUND);
+            throw new ControllerException('Не удалось удалить объект.', null, HttpStatusCodes::HTTP_NOT_FOUND);
         }
 
         return $result;
@@ -254,6 +259,7 @@ trait ControllerTrait
         if (!$result->getResult()) {
             throw new ControllerException(
                 'Объект по таким условиям не существует.',
+                null,
                 HttpStatusCodes::HTTP_NOT_FOUND
             );
         }
