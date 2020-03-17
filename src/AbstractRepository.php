@@ -60,6 +60,11 @@ abstract class AbstractRepository
      *
      * @return string
      *
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Helpers\Exceptions\HelperException
      */
@@ -74,11 +79,13 @@ abstract class AbstractRepository
 
         switch ($dbName) {
             case '$current':
+                /** @var App $app */
+                $app = get_static_container(App::class);
                 if ($object) {
-                    return $object->currentDbName ?: App::getSubdomain();
+                    return $object->currentDbName ?: $app::getSubdomain();
                 }
 
-                return App::getSubdomain();
+                return $app::getSubdomain();
 
             default:
                 return $dbName;
