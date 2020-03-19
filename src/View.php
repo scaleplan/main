@@ -240,8 +240,8 @@ class View implements ViewInterface
         $template = $this->getTemplate();
 
         $template->setUserRole($this->userRole);
-        $template->removeForbidden();
         $template->renderIncludes();
+        $template->removeForbidden();
         $page = $template->getTemplate();
         if ($this->title) {
             $page->find('title')->text($this->title);
