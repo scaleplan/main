@@ -309,13 +309,13 @@ trait ControllerTrait
     /**
      * Список объектов
      *
-     * @param DTO|array $dto
+     * @param DTO|array $data
      *
      * @return ResultInterface
      *
      * @throws ControllerException
      */
-    public function actionList($dto) : ResultInterface
+    public function actionList($data) : ResultInterface
     {
         /** @var AbstractController $this */
         $repo = $this->getRepository();
@@ -323,7 +323,10 @@ trait ControllerTrait
             throw new ControllerException('Репозиторий не найден.');
         }
 
-        $data = $dto->toFullSnakeArray();
+        if ($data instanceof DTO) {
+            $data = $data->toFullSnakeArray();
+        }
+
         if (array_key_exists('id', $data) && $data['id'] === null) {
             unset($data['id']);
         }
