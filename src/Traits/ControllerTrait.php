@@ -141,20 +141,20 @@ trait ControllerTrait
     /**
      * Сохранить новую модель
      *
-     * @param DTO $dto
+     * @param DTO|array $data
      *
      * @return DbResultInterface
      *
      * @throws ControllerException
      */
-    public function actionPut(DTO $dto) : DbResultInterface
+    public function actionPut($data) : DbResultInterface
     {
         try {
             /** @var AbstractController $this */
             $repo = $this->getRepository();
 
             /** @var DbResultInterface $result */
-            $result = $repo->put($dto);
+            $result = $repo->put($data);
             if (!$result->getResult()) {
                 throw new ControllerException('Не удалось создать объект.');
             }
