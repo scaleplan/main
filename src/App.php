@@ -17,6 +17,7 @@ use Scaleplan\Main\Interfaces\UserInterface;
 use Scaleplan\NginxGeo\NginxGeoInterface;
 use Symfony\Component\Yaml\Yaml;
 use function Scaleplan\DependencyInjection\get_required_container;
+use function Scaleplan\Helpers\get_env;
 use function Scaleplan\Helpers\get_required_env;
 
 /**
@@ -69,6 +70,11 @@ class App
      * @var string
      */
     protected static $currencyCode;
+
+    /**
+     * @var bool
+     */
+    protected static $isStartTransaction = true;
 
     /**
      * Данные для подключение к кэшу
@@ -182,6 +188,26 @@ class App
                 static::getLocale(),
                 \NumberFormatter::CURRENCY
             )->getTextAttribute(\NumberFormatter::CURRENCY_CODE);
+
+        if (null !== get_env('IS_START_TRANSACTION')) {
+            static::$isStartTransaction = (bool)get_env('IS_START_TRANSACTION');
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public static function isStartTransaction() : bool
+    {
+        return self::$isStartTransaction;
+    }
+
+    /**
+     * @param bool $isStartTransaction
+     */
+    public static function setIsStartTransaction(bool $isStartTransaction) : void
+    {
+        self::$isStartTransaction = $isStartTransaction;
     }
 
     /**
@@ -308,6 +334,7 @@ class App
         $dbConnect->setUserId($user->getId());
         $dbConnect->setLocale(static::getLocale());
         $dbConnect->setTimeZone(static::getTimeZone());
+        $dbConnect->setIsTransactional(static::$isStartTransaction);
 
         return static::$databases[$name] = $dbConnect;
     }

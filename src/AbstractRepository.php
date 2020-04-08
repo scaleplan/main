@@ -17,6 +17,7 @@ use Scaleplan\Result\Interfaces\DbResultInterface;
 use function Scaleplan\DependencyInjection\get_required_container;
 use function Scaleplan\DependencyInjection\get_static_container;
 use function Scaleplan\Event\dispatch;
+use function Scaleplan\Event\dispatch_async;
 use function Scaleplan\Helpers\get_required_env;
 
 /**
@@ -37,7 +38,7 @@ abstract class AbstractRepository
     public const EVENT_TAG       = 'event';
     public const ASYNC_EVENT_TAG = 'asyncEvent';
     public const ASYNC_TAG       = 'async';
-    public const DEFERRED        = 'deferred';
+    public const DEFERRED_TAG    = 'deferred';
 
     /**
      * @var string
@@ -126,7 +127,7 @@ abstract class AbstractRepository
      */
     public static function isDeferred(DocBlock $docBlock) : bool
     {
-        return (bool)$docBlock->getTagsByName(static::DEFERRED);
+        return (bool)$docBlock->getTagsByName(static::DEFERRED_TAG);
     }
 
     /**
@@ -177,9 +178,11 @@ abstract class AbstractRepository
      * @param DocBlock $docBlock
      * @param DbResultInterface $data
      *
+     * @param array $params
+     *
      * @throws \Scaleplan\Event\Exceptions\ClassNotImplementsEventInterfaceException
      */
-    public static function dispatchEvents(DocBlock $docBlock, DbResultInterface $data) : void
+    public static function dispatchEvents(DocBlock $docBlock, DbResultInterface $data, array $params) : void
     {
         $tags = $docBlock->getTagsByName(static::EVENT_TAG);
         if (!$tags) {
@@ -188,7 +191,7 @@ abstract class AbstractRepository
 
         foreach ($tags as $tag) {
             $eventClass = trim($tag->getDescription());
-            dispatch($eventClass, ['data' => $data]);
+            dispatch($eventClass, ['data' => $data, 'params' => $params,]);
         }
     }
 
@@ -196,9 +199,11 @@ abstract class AbstractRepository
      * @param DocBlock $docBlock
      * @param DbResultInterface $data
      *
+     * @param array $params
+     *
      * @throws \Scaleplan\Event\Exceptions\ClassNotImplementsEventInterfaceException
      */
-    public static function dispatchAsyncEvents(DocBlock $docBlock, DbResultInterface $data) : void
+    public static function dispatchAsyncEvents(DocBlock $docBlock, DbResultInterface $data, array $params) : void
     {
         $tags = $docBlock->getTagsByName(static::ASYNC_EVENT_TAG);
         if (!$tags) {
@@ -207,7 +212,7 @@ abstract class AbstractRepository
 
         foreach ($tags as $tag) {
             $eventClass = trim($tag->getDescription());
-            dispatch($eventClass, ['data' => $data]);
+            dispatch_async($eventClass, ['data' => $data, 'params' => $params,]);
         }
     }
 
@@ -333,8 +338,8 @@ abstract class AbstractRepository
 
         $result = $data->getValue();
         $result->setModelClass(static::getModelClass($docBlock));
-        static::dispatchEvents($docBlock, $result);
-        static::dispatchAsyncEvents($docBlock, $result);
+        static::dispatchEvents($docBlock, $result, $params);
+        static::dispatchAsyncEvents($docBlock, $result, $params);
 
         return $result;
     }
