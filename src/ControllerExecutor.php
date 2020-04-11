@@ -26,7 +26,8 @@ use function Scaleplan\DependencyInjection\get_required_container;
  */
 class ControllerExecutor implements ControllerExecutorInterface
 {
-    public const DOCBLOCK_TAGS_LABEL = 'tags';
+    public const DOCBLOCK_TAGS_LABEL             = 'tags';
+    public const DOCBLOCK_CHECK_CACHE_USER_LABEL = 'checkCacheUser';
 
     /**
      * @var LoggerInterface
@@ -132,6 +133,18 @@ class ControllerExecutor implements ControllerExecutorInterface
     }
 
     /**
+     * @param \ReflectionMethod $refMethod
+     *
+     * @return bool
+     */
+    protected static function isCheckCacheUser(\ReflectionMethod $refMethod) : bool
+    {
+        $docBlock = new DocBlock($refMethod);
+
+        return $docBlock->getTagsByName(static::DOCBLOCK_CHECK_CACHE_USER_LABEL)[0] ?? true;
+    }
+
+    /**
      * @return mixed|null
      */
     public function getUser()
@@ -222,7 +235,7 @@ class ControllerExecutor implements ControllerExecutorInterface
 
         $this->cache->setTags($tags);
         $this->cache->setParams($this->request->getParams() + $this->request->getCacheAdditionalParams());
-        return $this->cache->getHtml($this->user->getId())->getResult();
+        return $this->cache->getHtml(static::isCheckCacheUser($refMethod) ? $this->user->getId() : null)->getResult();
     }
 
     /**
