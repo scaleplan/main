@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Scaleplan\Main;
 
@@ -39,6 +40,9 @@ abstract class AbstractRepository
     public const ASYNC_EVENT_TAG = 'asyncEvent';
     public const ASYNC_TAG       = 'async';
     public const DEFERRED_TAG    = 'deferred';
+    public const ID_TAG          = 'idTag';
+    public const TAGS_TAG        = 'tags';
+    public const ID_FIELD_TAG    = 'idField';
 
     /**
      * @var string
@@ -94,9 +98,21 @@ abstract class AbstractRepository
     }
 
     /**
+     * @param DocBlock $docBlock
+     *
+     * @return array|null
+     */
+    protected static function getTags(DocBlock $docBlock) : ?array
+    {
+        $tagStr = $docBlock->getTagsByName(static::TAGS_TAG)[0] ?? null;
+
+        return null !== $tagStr ? array_map('trim', explode(',', $tagStr->getDescription())) : null;
+    }
+
+    /**
      * Получить префикс, который нужно добавить к именам полей результата запроса к БД
      *
-     * @param null|DocBlock $docBlock - блок описания префикса
+     * @param DocBlock $docBlock - блок описания префикса
      *
      * @return string|null
      */
@@ -108,6 +124,30 @@ abstract class AbstractRepository
         }
 
         return trim($docParam->getDescription());
+    }
+
+    /**
+     * @param DocBlock $docBlock
+     *
+     * @return string
+     */
+    public static function getIdTag(DocBlock $docBlock) : string
+    {
+        $docParam = $docBlock->getTagsByName(static::ID_TAG)[0] ?? null;
+
+        return $docParam ? trim((string)$docParam->getDescription()) : '';
+    }
+
+    /**
+     * @param DocBlock $docBlock
+     *
+     * @return string
+     */
+    public static function getIdField(DocBlock $docBlock) : string
+    {
+        $docParam = $docBlock->getTagsByName(static::ID_FIELD_TAG)[0] ?? null;
+
+        return $docParam ? trim((string)$docParam->getDescription()) : '';
     }
 
     /**
@@ -335,6 +375,10 @@ abstract class AbstractRepository
         if (null !== $castings) {
             $data->setCastings($castings);
         }
+
+        $data->setTags(static::getTags($docBlock));
+        $data->setIdTag(static::getIdTag($docBlock));
+        $data->setIdField(static::getIdField($docBlock));
 
         $result = $data->getValue();
         $result->setModelClass(static::getModelClass($docBlock));

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Scaleplan\Main;
 
@@ -7,17 +8,18 @@ use Psr\Log\LoggerInterface;
 use Scaleplan\Access\Access;
 use Scaleplan\Access\AccessControllerParent;
 use Scaleplan\Access\Exceptions\AuthException;
-use Scaleplan\Data\Data;
 use Scaleplan\Data\Interfaces\CacheInterface;
 use Scaleplan\Http\Constants\ContentTypes;
 use Scaleplan\Http\CurrentResponse;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
-use Scaleplan\Main\Exceptions\ViewNotFoundException;
 use Scaleplan\Main\Interfaces\ControllerExecutorInterface;
 use Scaleplan\Main\Interfaces\UserInterface;
 use Scaleplan\Result\Interfaces\ArrayResultInterface;
 use function Scaleplan\DependencyInjection\get_required_container;
+use function Scaleplan\DependencyInjection\get_static_container;
+use function Scaleplan\Helpers\get_env;
+use function Scaleplan\Helpers\get_required_env;
 
 /**
  * Class ControllerExecutor
@@ -26,8 +28,9 @@ use function Scaleplan\DependencyInjection\get_required_container;
  */
 class ControllerExecutor implements ControllerExecutorInterface
 {
-    public const DOCBLOCK_TAGS_LABEL             = 'tags';
-    public const DOCBLOCK_CHECK_CACHE_USER_LABEL = 'checkCacheUser';
+    public const DOCBLOCK_TAGS_LABEL               = 'tags';
+    public const DOCBLOCK_NOCHECK_CACHE_USER_LABEL = 'noCheckCacheUser';
+    public const DOCBLOCK_CACHE_DB_NAME_LABEL      = 'cacheDbName';
 
     /**
      * @var LoggerInterface
@@ -65,6 +68,11 @@ class ControllerExecutor implements ControllerExecutorInterface
     protected $checkAccess = true;
 
     /**
+     * @var bool
+     */
+    protected $cacheEnable = false;
+
+    /**
      * ControllerExecutor constructor.
      *
      * @param UserInterface|null $user
@@ -72,13 +80,10 @@ class ControllerExecutor implements ControllerExecutorInterface
      * @param CacheInterface|null $cache
      *
      * @throws \ReflectionException
-     * @throws \Scaleplan\Data\Exceptions\DataException
-     * @throws \Scaleplan\Data\Exceptions\ValidationException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
      * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
-     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
     public function __construct(
         UserInterface $user = null,
@@ -90,16 +95,41 @@ class ControllerExecutor implements ControllerExecutorInterface
         $this->response = $this->request->getResponse();
         $this->user = $user ?? get_required_container(UserInterface::class);
         $this->logger = get_required_container(LoggerInterface::class);
-        if (!$cache) {
-            /** @var Data $cache */
-            $cache = get_required_container(CacheInterface::class, [$this->request->getURL(), $this->request->getParams()]);
-            try {
-                $cache->setVerifyingFilePath(View::getFullFilePath(App::getViewPath()));
-            } catch (ViewNotFoundException $e) {
-                //$this->logger->error($e->getMessage());
-            }
-        }
         $this->cache = $cache;
+        if (null !== get_env('DB_CACHE_ENABLE')) {
+            $this->cacheEnable = (bool)get_env('DB_CACHE_ENABLE');
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCacheEnable() : bool
+    {
+        return $this->cacheEnable;
+    }
+
+    /**
+     * @param bool $cacheEnable
+     */
+    public function setCacheEnable(bool $cacheEnable) : void
+    {
+        $this->cacheEnable = $cacheEnable;
+    }
+
+    /**
+     * @param $docBlock
+     *
+     * @return int|string
+     */
+    public function getCacheUserId($docBlock)
+    {
+        static $userId;
+        if (null === $userId) {
+            $userId = static::isCheckCacheUser($docBlock) ? $this->user->getId() : '';
+        }
+
+        return $userId;
     }
 
     /**
@@ -119,29 +149,59 @@ class ControllerExecutor implements ControllerExecutorInterface
     }
 
     /**
-     * @param \ReflectionMethod $refMethod
+     * @param DocBlock $docBlock
      *
-     * @return array
-     *
-     * @throws \InvalidArgumentException
+     * @return array|null
      */
-    protected static function getMethodTags(\ReflectionMethod $refMethod) : array
+    protected static function getMethodTags(DocBlock $docBlock) : ?array
     {
-        $docBlock = new DocBlock($refMethod);
-        $tagStr = $docBlock->getTagsByName(static::DOCBLOCK_TAGS_LABEL)[0] ?? '';
-        return array_map('trim', explode(',', $tagStr));
+        $tagStr = $docBlock->getTagsByName(static::DOCBLOCK_TAGS_LABEL)[0] ?? null;
+
+        return null !== $tagStr ? array_map('trim', explode(',', $tagStr->getDescription())) : null;
     }
 
     /**
-     * @param \ReflectionMethod $refMethod
+     * @param DocBlock $docBlock
      *
      * @return bool
      */
-    protected static function isCheckCacheUser(\ReflectionMethod $refMethod) : bool
+    protected static function isCheckCacheUser(DocBlock $docBlock) : bool
     {
-        $docBlock = new DocBlock($refMethod);
+        if (empty($docBlock->getTagsByName(static::DOCBLOCK_NOCHECK_CACHE_USER_LABEL)[0])) {
+            return true;
+        }
 
-        return $docBlock->getTagsByName(static::DOCBLOCK_CHECK_CACHE_USER_LABEL)[0] ?? true;
+        return false;
+    }
+
+    /**
+     * @param DocBlock $docBlock
+     *
+     * @return string
+     *
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Scaleplan\Helpers\Exceptions\HelperException
+     */
+    public static function getCacheDbName(DocBlock $docBlock) : string
+    {
+        $dbName = $docBlock->getTagsByName(static::DOCBLOCK_CACHE_DB_NAME_LABEL)[0] ?? null;
+        if (!$dbName || !($dbName = trim($dbName->getDescription()))) {
+            return get_required_env(ConfigConstants::DEFAULT_DB);
+        }
+
+        if ($dbName === '$current') {
+            /** @var App $app */
+            $app = get_static_container(App::class);
+
+            return $app::getSubdomain();
+        }
+
+        return $dbName;
     }
 
     /**
@@ -220,22 +280,48 @@ class ControllerExecutor implements ControllerExecutorInterface
     /**
      * @param \ReflectionMethod $refMethod
      *
+     * @return DocBlock
+     */
+    public static function getMethodDocBlock(\ReflectionMethod $refMethod) : DocBlock
+    {
+        static $docBlock;
+        if (!$docBlock) {
+            $docBlock = new DocBlock($refMethod);
+        }
+
+        return $docBlock;
+    }
+
+    /**
+     * @param \ReflectionMethod $refMethod
+     *
      * @return string|null
      *
-     * @throws \Scaleplan\Cache\Exceptions\MemcachedCacheException
-     * @throws \Scaleplan\Cache\Exceptions\RedisCacheException
-     * @throws \Scaleplan\Data\Exceptions\DataException
-     * @throws \Scaleplan\Data\Exceptions\ValidationException
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     * @throws \Scaleplan\Helpers\Exceptions\HelperException
      */
     protected function getCacheValue(\ReflectionMethod $refMethod) : ?string
     {
-        if (!$this->cache || !$this->user || !($tags = static::getMethodTags($refMethod))) {
+        $docBlock = static::getMethodDocBlock($refMethod);
+        if (!$this->cacheEnable || !$this->user || null === ($tags = static::getMethodTags($docBlock))) {
             return null;
         }
 
-        $this->cache->setTags($tags);
-        $this->cache->setParams($this->request->getParams() + $this->request->getCacheAdditionalParams());
-        return $this->cache->getHtml(static::isCheckCacheUser($refMethod) ? $this->user->getId() : null)->getResult();
+        if (!$this->cache) {
+            $this->cache = get_required_container(
+                CacheInterface::class,
+                [$this->request->getURL(), $this->request->getParams() + $this->request->getCacheAdditionalParams()]
+            );
+            $this->cache->setCacheDbName(static::getCacheDbName($docBlock));
+            $this->cache->setTags($tags);
+        }
+
+        return $this->cache->getHtml($this->getCacheUserId($docBlock))->getResult();
     }
 
     /**
@@ -245,7 +331,6 @@ class ControllerExecutor implements ControllerExecutorInterface
      */
     public function execute() : CurrentResponse
     {
-//        $start = microtime(true);
         try {
             [$controllerName, $methodName] = $this->convertURLToControllerMethod();
 
@@ -261,6 +346,7 @@ class ControllerExecutor implements ControllerExecutorInterface
             $cacheValue = $this->getCacheValue($refMethod);
             if ($cacheValue !== null) {
                 $this->response->setPayload($cacheValue);
+                $this->response->send();
                 return $this->response;
             }
 
@@ -271,10 +357,10 @@ class ControllerExecutor implements ControllerExecutorInterface
 
             $this->response->setPayload($result);
             $this->response->send();
-//            $time = microtime(true) - $start;
-//            if ($time > 0.5) {
-//                throw new \Exception('Request is too slow: ' . $time);
-//            }
+
+            if ($this->cacheEnable) {
+                $this->cache->setHtml($result, $this->getCacheUserId(static::getMethodDocBlock($refMethod)));
+            }
         } catch (AuthException $e) {
             if ($this->request->getAccept() === ContentTypes::JSON) {
                 $this->response->buildError($e);
