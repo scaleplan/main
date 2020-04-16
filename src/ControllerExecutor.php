@@ -96,8 +96,8 @@ class ControllerExecutor implements ControllerExecutorInterface
         $this->user = $user ?? get_required_container(UserInterface::class);
         $this->logger = get_required_container(LoggerInterface::class);
         $this->cache = $cache;
-        if (null !== get_env('DB_CACHE_ENABLE')) {
-            $this->cacheEnable = (bool)get_env('DB_CACHE_ENABLE');
+        if (null !== get_env('CACHE_ENABLE')) {
+            $this->cacheEnable = (bool)get_env('CACHE_ENABLE');
         }
     }
 
