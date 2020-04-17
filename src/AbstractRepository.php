@@ -354,7 +354,7 @@ abstract class AbstractRepository
         /** @var App $app */
         $app = get_static_container(App::class);
         /** @var Data $data */
-        $data = get_required_container(DataInterface::class, [$sql, $params]);
+        $data = get_required_container(DataInterface::class, [$sql, $params], false);
         $db = $app::getDB(static::getDbName($docBlock, $object));
         if ($db instanceof PgDb && static::isDeferred($docBlock)) {
             $db->setTransactionDeferred(true);

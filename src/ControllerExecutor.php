@@ -15,6 +15,7 @@ use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Interfaces\ControllerExecutorInterface;
 use Scaleplan\Main\Interfaces\UserInterface;
+use Scaleplan\Result\ArrayResult;
 use Scaleplan\Result\Interfaces\ArrayResultInterface;
 use function Scaleplan\DependencyInjection\get_required_container;
 use function Scaleplan\DependencyInjection\get_static_container;
@@ -157,7 +158,11 @@ class ControllerExecutor implements ControllerExecutorInterface
     {
         $tagStr = $docBlock->getTagsByName(static::DOCBLOCK_TAGS_LABEL)[0] ?? null;
 
-        return null !== $tagStr ? array_map('trim', explode(',', $tagStr->getDescription())) : null;
+        return null !== $tagStr
+            ? array_map(static function ($tag) {
+                return trim(@constant($tag) ?? $tag);
+            }, explode(',', $tagStr->getDescription()))
+            : null;
     }
 
     /**
@@ -295,7 +300,7 @@ class ControllerExecutor implements ControllerExecutorInterface
     /**
      * @param \ReflectionMethod $refMethod
      *
-     * @return string|null
+     * @return string|null|array
      *
      * @throws \ReflectionException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
@@ -304,8 +309,9 @@ class ControllerExecutor implements ControllerExecutorInterface
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Helpers\Exceptions\HelperException
+     * @throws Exceptions\ViewNotFoundException
      */
-    protected function getCacheValue(\ReflectionMethod $refMethod) : ?string
+    protected function getCacheValue(\ReflectionMethod $refMethod)
     {
         $docBlock = static::getMethodDocBlock($refMethod);
         if (!$this->cacheEnable || !$this->user || null === ($tags = static::getMethodTags($docBlock))) {
@@ -319,6 +325,15 @@ class ControllerExecutor implements ControllerExecutorInterface
             );
             $this->cache->setCacheDbName(static::getCacheDbName($docBlock));
             $this->cache->setTags($tags);
+            if ($this->request->getAccept() !== ContentTypes::JSON) {
+                /** @var App $app */
+                $app = get_static_container(App::class);
+                $this->cache->setVerifyingFilePath(
+                    get_required_env('BUNDLE_PATH')
+                    . get_required_env('VIEWS_PATH')
+                    . $app::getViewPath($this->user->getRoleClass())
+                );
+            }
         }
 
         return $this->cache->getHtml($this->getCacheUserId($docBlock))->getResult();
@@ -345,8 +360,14 @@ class ControllerExecutor implements ControllerExecutorInterface
 
             $cacheValue = $this->getCacheValue($refMethod);
             if ($cacheValue !== null) {
+                if (is_array($cacheValue)) {
+                    $this->response->setContentType(ContentTypes::JSON);
+                    $cacheValue = new ArrayResult($cacheValue);
+                }
+
                 $this->response->setPayload($cacheValue);
                 $this->response->send();
+
                 return $this->response;
             }
 
@@ -358,7 +379,7 @@ class ControllerExecutor implements ControllerExecutorInterface
             $this->response->setPayload($result);
             $this->response->send();
 
-            if ($this->cacheEnable) {
+            if ($this->cacheEnable && $this->cache) {
                 $this->cache->setHtml($result, $this->getCacheUserId(static::getMethodDocBlock($refMethod)));
             }
         } catch (AuthException $e) {
