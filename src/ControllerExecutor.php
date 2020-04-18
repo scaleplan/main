@@ -13,6 +13,7 @@ use Scaleplan\Http\Constants\ContentTypes;
 use Scaleplan\Http\CurrentResponse;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
+use Scaleplan\Main\Exceptions\ViewNotFoundException;
 use Scaleplan\Main\Interfaces\ControllerExecutorInterface;
 use Scaleplan\Main\Interfaces\UserInterface;
 use Scaleplan\Result\ArrayResult;
@@ -326,13 +327,16 @@ class ControllerExecutor implements ControllerExecutorInterface
             $this->cache->setCacheDbName(static::getCacheDbName($docBlock));
             $this->cache->setTags($tags);
             if ($this->request->getAccept() !== ContentTypes::JSON) {
-                /** @var App $app */
-                $app = get_static_container(App::class);
-                $this->cache->setVerifyingFilePath(
-                    get_required_env('BUNDLE_PATH')
-                    . get_required_env('VIEWS_PATH')
-                    . $app::getViewPath($this->user->getRoleClass())
-                );
+                try {
+                    /** @var App $app */
+                    $app = get_static_container(App::class);
+                    $this->cache->setVerifyingFilePath(
+                        get_required_env('BUNDLE_PATH')
+                        . get_required_env('VIEWS_PATH')
+                        . $app::getViewPath($this->user->getRoleClass())
+                    );
+                } catch (ViewNotFoundException $e) {
+                }
             }
         }
 

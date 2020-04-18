@@ -31,18 +31,19 @@ abstract class AbstractRepository
     public const TABLE                  = null;
     public const DEFAULT_SORT_DIRECTION = 'DESC';
 
-    public const DB_NAME_TAG     = 'dbName';
-    public const PREFIX_TAG      = 'prefix';
-    public const MODIFYING_TAG   = 'modifying';
-    public const MODEL_TAG       = 'model';
-    public const CASTINGS_TAG    = 'cast';
-    public const EVENT_TAG       = 'event';
-    public const ASYNC_EVENT_TAG = 'asyncEvent';
-    public const ASYNC_TAG       = 'async';
-    public const DEFERRED_TAG    = 'deferred';
-    public const ID_TAG          = 'idTag';
-    public const TAGS_TAG        = 'tags';
-    public const ID_FIELD_TAG    = 'idField';
+    public const DB_NAME_TAG      = 'dbName';
+    public const PREFIX_TAG       = 'prefix';
+    public const MODIFYING_TAG    = 'modifying';
+    public const NO_MODIFYING_TAG = 'noModifying';
+    public const MODEL_TAG        = 'model';
+    public const CASTINGS_TAG     = 'cast';
+    public const EVENT_TAG        = 'event';
+    public const ASYNC_EVENT_TAG  = 'asyncEvent';
+    public const ASYNC_TAG        = 'async';
+    public const DEFERRED_TAG     = 'deferred';
+    public const ID_TAG           = 'idTag';
+    public const TAGS_TAG         = 'tags';
+    public const ID_FIELD_TAG     = 'idField';
 
     /**
      * @var string
@@ -158,6 +159,16 @@ abstract class AbstractRepository
     public static function isModifying(DocBlock $docBlock) : bool
     {
         return (bool)$docBlock->getTagsByName(static::MODIFYING_TAG);
+    }
+
+    /**
+     * @param DocBlock $docBlock
+     *
+     * @return bool
+     */
+    public static function isNoModifying(DocBlock $docBlock) : bool
+    {
+        return (bool)$docBlock->getTagsByName(static::NO_MODIFYING_TAG);
     }
 
     /**
@@ -361,12 +372,17 @@ abstract class AbstractRepository
         }
 
         $data->setDbConnect($db);
+        $data->setTags(static::getTags($docBlock));
 
         if (static::isAsync($docBlock)) {
             $data->setIsAsync();
         }
 
         $data->setPrefix(static::getPrefix($docBlock));
+        if (static::isNoModifying($docBlock)) {
+            $data->setIsModifying(false);
+        }
+
         if (static::isModifying($docBlock)) {
             $data->setIsModifying();
         }
@@ -376,7 +392,6 @@ abstract class AbstractRepository
             $data->setCastings($castings);
         }
 
-        $data->setTags(static::getTags($docBlock));
         $data->setIdTag(static::getIdTag($docBlock));
         $data->setIdField(static::getIdField($docBlock));
 
