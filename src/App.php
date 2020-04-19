@@ -88,7 +88,7 @@ class App
      * @param string $hostOrSocket - хост или сокет подключения
      * @param int $port - порт поключения
      *
-     * @return \Memcached|mixed|\Redis
+     * @return \Memcached|\Redis
      * @throws CacheException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
