@@ -161,7 +161,8 @@ class ControllerExecutor implements ControllerExecutorInterface
 
         return null !== $tagStr
             ? array_map(static function ($tag) {
-                return trim(@constant($tag) ?? $tag);
+                $tag = trim($tag);
+                return @constant($tag) ?? $tag;
             }, explode(',', $tagStr->getDescription()))
             : null;
     }
@@ -310,7 +311,6 @@ class ControllerExecutor implements ControllerExecutorInterface
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Helpers\Exceptions\HelperException
-     * @throws Exceptions\ViewNotFoundException
      */
     protected function getCacheValue(\ReflectionMethod $refMethod)
     {
