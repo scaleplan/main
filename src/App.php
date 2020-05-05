@@ -276,7 +276,7 @@ class App
                     . "/$name.yml";
 
                 if (!file_exists($filePath)) {
-                    throw new AppException('Файл подключения к базе данных не найден');
+                    throw new AppException("Файл подключения к базе данных '$name' не найден");
                 }
 
                 $_SESSION['databases'][$name] = Yaml::parse(file_get_contents($filePath));
@@ -371,8 +371,11 @@ class App
             !$isNewConnection
         );
         static::initDb($dbConnect);
+        if (!$isNewConnection) {
+            static::$databases[$name] = $dbConnect;
+        }
 
-        return static::$databases[$name] = $dbConnect;
+        return $dbConnect;
     }
 
     /**
