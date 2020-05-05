@@ -9,6 +9,7 @@ use Scaleplan\Db\Interfaces\TableTagsInterface;
 use Scaleplan\Helpers\Helper;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
+use Scaleplan\Main\Exceptions\AppException;
 use Scaleplan\Main\Exceptions\CacheException;
 use Scaleplan\Main\Exceptions\DatabaseException;
 use Scaleplan\Main\Exceptions\InvalidHostException;
@@ -258,44 +259,27 @@ class App
     }
 
     /**
-     * Подкючиться к базе данных (если подключения еще нет) и вернуть объект подключения
+     * @param string $name
      *
-     * @param string|null $name - имя базы данных
+     * @return array
      *
-     * @return DbInterface
-     *
+     * @throws AppException
      * @throws DatabaseException
-     * @throws \ReflectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
-    public static function getDB(string $name = null) : DbInterface
+    protected static function getDatabaseConnectionInfo(string $name) : array
     {
-        if (!$name) {
-            $name = get_required_env(ConfigConstants::DEFAULT_DB);
-        }
-
-        if (\in_array($name, static::$denyDatabases, true)) {
-            throw new DatabaseException("Подключение к базе данных '$name' не разрешено");
-        }
-
-        if (!empty(static::$databases[$name])) {
-            return static::$databases[$name];
-        }
-
         if (empty(static::$$name)) {
             if (empty($_SESSION['databases'][$name])) {
-                $_SESSION['databases'][$name]
-                    = Yaml::parse(
-                    file_get_contents(
-                        get_required_env(ConfigConstants::BUNDLE_PATH)
-                        . get_required_env(ConfigConstants::DB_CONFIGS_PATH)
-                        . "/$name.yml"
-                    )
-                );
+                $filePath = get_required_env(ConfigConstants::BUNDLE_PATH)
+                    . get_required_env(ConfigConstants::DB_CONFIGS_PATH)
+                    . "/$name.yml";
+
+                if (!file_exists($filePath)) {
+                    throw new AppException('Файл подключения к базе данных не найден');
+                }
+
+                $_SESSION['databases'][$name] = Yaml::parse(file_get_contents($filePath));
             }
 
             $db = $_SESSION['databases'][$name];
@@ -315,16 +299,20 @@ class App
             throw new DatabaseException("В данных о подключении к БД '$name' не хватает пароля пользователя БД");
         }
 
-        /** @var DbInterface $dbConnect */
-        $dbConnect = get_required_container(
-            DbInterface::class,
-            [
-                $db['DNS'],
-                $db['USER'],
-                $db['PASSWORD'],
-                !empty($db['OPTIONS']) ? $db['OPTIONS'] : [],
-            ]
-        );
+        return $db;
+    }
+
+    /**
+     * @param DbInterface $dbConnect
+     *
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
+     */
+    protected static function initDb(DbInterface $dbConnect) : void
+    {
         /** @var TableTagsInterface $tableTags */
         $tableTags = get_required_container(TableTagsInterface::class, [$dbConnect]);
         $tableTags->initTablesList(!empty($db['SCHEMAS']) ? $db['SCHEMAS'] : null);
@@ -335,6 +323,54 @@ class App
         $dbConnect->setLocale(static::getLocale());
         $dbConnect->setTimeZone(static::getTimeZone());
         $dbConnect->setIsTransactional(static::$isStartTransaction);
+    }
+
+    /**
+     * Подкючиться к базе данных (если подключения еще нет) и вернуть объект подключения
+     *
+     * @param string|null $name - имя базы данных
+     *
+     * @param bool $isNewConnection
+     *
+     * @return DbInterface
+     *
+     * @throws AppException
+     * @throws DatabaseException
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
+     * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
+     */
+    public static function getDB(string $name = null, bool $isNewConnection = false) : DbInterface
+    {
+        if (!$name) {
+            $name = get_required_env(ConfigConstants::DEFAULT_DB);
+        }
+
+        if (\in_array($name, static::$denyDatabases, true)) {
+            throw new DatabaseException("Подключение к базе данных '$name' не разрешено");
+        }
+
+        if (!empty(static::$databases[$name]) && !$isNewConnection) {
+            return static::$databases[$name];
+        }
+
+        $db = static::getDatabaseConnectionInfo($name);
+
+        /** @var DbInterface $dbConnect */
+        $dbConnect = get_required_container(
+            DbInterface::class,
+            [
+                $db['DNS'],
+                $db['USER'],
+                $db['PASSWORD'],
+                !empty($db['OPTIONS']) ? $db['OPTIONS'] : [],
+            ],
+            !$isNewConnection
+        );
+        static::initDb($dbConnect);
 
         return static::$databases[$name] = $dbConnect;
     }
