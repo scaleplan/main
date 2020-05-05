@@ -31,19 +31,20 @@ abstract class AbstractRepository
     public const TABLE                  = null;
     public const DEFAULT_SORT_DIRECTION = 'DESC';
 
-    public const DB_NAME_TAG      = 'dbName';
-    public const PREFIX_TAG       = 'prefix';
-    public const MODIFYING_TAG    = 'modifying';
-    public const NO_MODIFYING_TAG = 'noModifying';
-    public const MODEL_TAG        = 'model';
-    public const CASTINGS_TAG     = 'cast';
-    public const EVENT_TAG        = 'event';
-    public const ASYNC_EVENT_TAG  = 'asyncEvent';
-    public const ASYNC_TAG        = 'async';
-    public const DEFERRED_TAG     = 'deferred';
-    public const ID_TAG           = 'idTag';
-    public const TAGS_TAG         = 'tags';
-    public const ID_FIELD_TAG     = 'idField';
+    public const DB_NAME_TAG           = 'dbName';
+    public const PREFIX_TAG            = 'prefix';
+    public const MODIFYING_TAG         = 'modifying';
+    public const NO_MODIFYING_TAG      = 'noModifying';
+    public const MODEL_TAG             = 'model';
+    public const CASTINGS_TAG          = 'cast';
+    public const EVENT_TAG             = 'event';
+    public const ASYNC_EVENT_TAG       = 'asyncEvent';
+    public const ASYNC_TAG             = 'async';
+    public const DEFERRED_TAG          = 'deferred';
+    public const ID_TAG                = 'idTag';
+    public const TAGS_TAG              = 'tags';
+    public const ID_FIELD_TAG          = 'idField';
+    public const IN_NEW_CONNECTION_TAG = 'inNewConnection';
 
     /**
      * @var string
@@ -159,6 +160,16 @@ abstract class AbstractRepository
     public static function isModifying(DocBlock $docBlock) : bool
     {
         return (bool)$docBlock->getTagsByName(static::MODIFYING_TAG);
+    }
+
+    /**
+     * @param DocBlock $docBlock
+     *
+     * @return bool
+     */
+    public static function isInNewConnection(DocBlock $docBlock) : bool
+    {
+        return (bool)$docBlock->getTagsByName(static::IN_NEW_CONNECTION_TAG);
     }
 
     /**
@@ -333,6 +344,7 @@ abstract class AbstractRepository
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Helpers\Exceptions\HelperException
      * @throws \Scaleplan\Result\Exceptions\ResultException
+     * @throws Exceptions\AppException
      */
     public static function invoke(
         string $propertyName,
@@ -366,7 +378,9 @@ abstract class AbstractRepository
         $app = get_static_container(App::class);
         /** @var Data $data */
         $data = get_required_container(DataInterface::class, [$sql, $params], false);
-        $db = $app::getDB(static::getDbName($docBlock, $object));
+        $inNewConnection = static::isInNewConnection($docBlock);
+        $db = $app::getDB(static::getDbName($docBlock, $object), $inNewConnection);
+        $inNewConnection && $db->setIsTransactional(false);
         if ($db instanceof PgDb && static::isDeferred($docBlock)) {
             $db->setTransactionDeferred(true);
         }
