@@ -1,17 +1,15 @@
 <?php
+declare(strict_types=1);
 
 namespace Scaleplan\Main;
 
 use PhpQuery\PhpQueryObject;
-use Scaleplan\Access\Access;
-use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Interfaces\ViewInterface;
 use Scaleplan\Result\DbResult;
 use Scaleplan\Result\Interfaces\ArrayResultInterface;
 use Scaleplan\Result\Interfaces\DbResultInterface;
 use Scaleplan\Templater\Templater;
-use function Scaleplan\DependencyInjection\get_required_container;
 use function Scaleplan\Helpers\get_env;
 use function Scaleplan\Helpers\get_required_env;
 
@@ -62,7 +60,7 @@ class View implements ViewInterface
     protected $title;
 
     /**
-     * @var string
+     * @var string|null
      */
     protected $userRole;
 
@@ -81,12 +79,6 @@ class View implements ViewInterface
      *
      * @param string|null $filePath - путь к файлу шаблона
      * @param array $settings - настройки шаблонизатора
-     *
-     * @throws \ReflectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
     public function __construct(
         string $filePath = null,
@@ -94,15 +86,6 @@ class View implements ViewInterface
     )
     {
         $this->filePath = $filePath;
-        /** @var CurrentRequestInterface $currentRequest */
-        $currentRequest = get_required_container(CurrentRequestInterface::class);
-        /** @var Access $access */
-        $access = get_required_container(Access::class);
-        if (empty($settings['forbiddenSelectors'])) {
-            $settings['forbiddenSelectors']
-                = $access->getForbiddenSelectors(substr($currentRequest->getURL(), 1), $currentRequest->getParams());
-        }
-
         $this->settings = $settings;
     }
 
@@ -123,9 +106,9 @@ class View implements ViewInterface
     }
 
     /**
-     * @param string $userRole
+     * @param string|null $userRole
      */
-    public function setUserRole(string $userRole) : void
+    public function setUserRole(?string $userRole) : void
     {
         $this->userRole = $userRole;
     }
@@ -276,7 +259,7 @@ class View implements ViewInterface
      */
     public static function renderError(\Throwable $e) : PhpQueryObject
     {
-        $view = new static(get_required_env('ERRORS_PATH')
+        $view = new self(get_required_env('ERRORS_PATH')
             . (get_env('ERROR_TEMPLATE_PATH') ?? static::ERROR_TEMPLATE_PATH));
         $view->addData(
             new DbResult(['code' => $e->getCode(), 'message' => iconv('UTF-8', 'UTF-8//IGNORE', $e->getMessage())])

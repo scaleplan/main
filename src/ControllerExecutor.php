@@ -13,6 +13,7 @@ use Scaleplan\Http\Constants\ContentTypes;
 use Scaleplan\Http\CurrentResponse;
 use Scaleplan\Http\Interfaces\CurrentRequestInterface;
 use Scaleplan\Main\Constants\ConfigConstants;
+use Scaleplan\Main\Exceptions\ControllerException;
 use Scaleplan\Main\Exceptions\ViewNotFoundException;
 use Scaleplan\Main\Interfaces\ControllerExecutorInterface;
 use Scaleplan\Main\Interfaces\UserInterface;
@@ -251,6 +252,9 @@ class ControllerExecutor implements ControllerExecutorInterface
      * @param array $args - аргументы метода
      *
      * @return mixed
+     *
+     * @throws \ReflectionException
+     * @throws ControllerException
      */
     protected static function executeControllerMethod(
         \ReflectionClass $refClass,
@@ -260,11 +264,19 @@ class ControllerExecutor implements ControllerExecutorInterface
     {
         $object = (!$method->isStatic() && $refClass->isInstantiable()) ? $refClass->newInstance() : null;
         $params = $method->getParameters();
-        if (!empty($params[0]) && $params[0]->isVariadic()) {
-            return $method->invoke($object, $args);
-        }
+        try {
+            if (!empty($params[0]) && $params[0]->isVariadic()) {
+                return $method->invoke($object, $args);
+            }
 
-        return $method->invokeArgs($object, $args);
+            return $method->invokeArgs($object, $args);
+        } catch (\ReflectionException $e) {
+            if (strpos($e->getMessage(), 'Trying to invoke private method') !== false) {
+                throw new ControllerException('Метод не доступен');
+            }
+
+            throw $e;
+        }
     }
 
     /**

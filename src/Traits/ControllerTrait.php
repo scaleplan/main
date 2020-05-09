@@ -191,8 +191,12 @@ trait ControllerTrait
             throw new ControllerException('Репозиторий не найден.');
         }
 
+        if (!$dto->toSnakeArray()) {
+            throw new ControllerException('Нет данных для обновления.');
+        }
+
         /** @var DbResultInterface $result */
-        $result = $repo->update($id->toSnakeArray() + $dto->toFullSnakeArray());
+        $result = $repo->update($id->toSnakeArray() + $dto->toSnakeArray());
         if (!$result->getResult()) {
             throw new ControllerException(
                 'Не удалось изменить объект. Возможно, объект не существует.',
