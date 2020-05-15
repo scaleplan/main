@@ -45,6 +45,7 @@ abstract class AbstractRepository
     public const TAGS_TAG              = 'tags';
     public const ID_FIELD_TAG          = 'idField';
     public const IN_NEW_CONNECTION_TAG = 'inNewConnection';
+    public const NO_CACHE_TAG          = 'noCache';
 
     /**
      * @var string
@@ -160,6 +161,16 @@ abstract class AbstractRepository
     public static function isModifying(DocBlock $docBlock) : bool
     {
         return (bool)$docBlock->getTagsByName(static::MODIFYING_TAG);
+    }
+
+    /**
+     * @param DocBlock $docBlock
+     *
+     * @return bool
+     */
+    public static function isNoCache(DocBlock $docBlock) : bool
+    {
+        return (bool)$docBlock->getTagsByName(static::NO_CACHE_TAG);
     }
 
     /**
@@ -378,6 +389,7 @@ abstract class AbstractRepository
         $app = get_static_container(App::class);
         /** @var Data $data */
         $data = get_required_container(DataInterface::class, [$sql, $params], false);
+        $data->setCacheEnable(!static::isNoCache($docBlock));
         $inNewConnection = static::isInNewConnection($docBlock);
         $db = $app::getDB(static::getDbName($docBlock, $object), $inNewConnection);
         $inNewConnection && $db->setIsTransactional(false);
@@ -446,6 +458,7 @@ abstract class AbstractRepository
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Helpers\Exceptions\HelperException
      * @throws \Scaleplan\Result\Exceptions\ResultException
+     * @throws Exceptions\AppException
      */
     public static function __callStatic(string $propertyName, array $data) : DbResultInterface
     {
@@ -481,6 +494,7 @@ abstract class AbstractRepository
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Helpers\Exceptions\HelperException
      * @throws \Scaleplan\Result\Exceptions\ResultException
+     * @throws Exceptions\AppException
      */
     public function __call(string $propertyName, array $data) : DbResultInterface
     {
