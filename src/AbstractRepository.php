@@ -389,7 +389,10 @@ abstract class AbstractRepository
         $app = get_static_container(App::class);
         /** @var Data $data */
         $data = get_required_container(DataInterface::class, [$sql, $params], false);
-        $data->setCacheEnable(!static::isNoCache($docBlock));
+        if ($isNoCache = static::isNoCache($docBlock)) {
+            $data->setCacheEnable(false);
+        }
+
         $inNewConnection = static::isInNewConnection($docBlock);
         $db = $app::getDB(static::getDbName($docBlock, $object), $inNewConnection);
         $inNewConnection && $db->setIsTransactional(false);
