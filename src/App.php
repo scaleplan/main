@@ -165,11 +165,13 @@ class App
      */
     public static function init() : void
     {
-        if (!Helper::hostCheck($_SERVER['HTTP_HOST'])) {
-            throw new InvalidHostException('Передан неверный заголовок HTTP-HOST');
-        }
+        if (isset($_SERVER['HTTP_HOST'])) {
+            if (!Helper::hostCheck($_SERVER['HTTP_HOST'])) {
+                throw new InvalidHostException('Передан неверный заголовок HTTP-HOST');
+            }
 
-        static::$host = $_SERVER['HTTP_HOST'];
+            static::$host = $_SERVER['HTTP_HOST'];
+        }
 
         /** @var NginxGeoInterface $geo */
         $geo = get_required_container(NginxGeoInterface::class, [$_REQUEST]);
@@ -313,16 +315,17 @@ class App
      */
     protected static function initDb(DbInterface $dbConnect) : void
     {
-        /** @var TableTagsInterface $tableTags */
-        $tableTags = get_required_container(TableTagsInterface::class, [$dbConnect]);
-        $tableTags->initTablesList(!empty($db['SCHEMAS']) ? $db['SCHEMAS'] : null);
-
         /** @var UserInterface $user */
         $user = get_required_container(UserInterface::class);
+
         $dbConnect->setUserId($user->getId());
         $dbConnect->setLocale(static::getLocale());
         $dbConnect->setTimeZone(static::getTimeZone());
         $dbConnect->setIsTransactional(static::$isStartTransaction);
+
+        /** @var TableTagsInterface $tableTags */
+        $tableTags = get_required_container(TableTagsInterface::class, [$dbConnect]);
+        $tableTags->initTablesList(!empty($db['SCHEMAS']) ? $db['SCHEMAS'] : null);
     }
 
     /**

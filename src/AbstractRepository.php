@@ -16,6 +16,7 @@ use Scaleplan\Main\Exceptions\RepositoryMethodArgsInvalidException;
 use Scaleplan\Main\Exceptions\RepositoryMethodNotFoundException;
 use Scaleplan\Result\Interfaces\DbResultInterface;
 use function Scaleplan\DependencyInjection\get_required_container;
+use function Scaleplan\DependencyInjection\get_required_static_container;
 use function Scaleplan\DependencyInjection\get_static_container;
 use function Scaleplan\Event\dispatch;
 use function Scaleplan\Event\dispatch_async;
@@ -386,7 +387,7 @@ abstract class AbstractRepository
         $docBlock = new DocBlock($reflector->getDocComment());
 
         /** @var App $app */
-        $app = get_static_container(App::class);
+        $app = get_required_static_container(App::class);
         /** @var Data $data */
         $data = get_required_container(DataInterface::class, [$sql, $params], false);
         if ($isNoCache = static::isNoCache($docBlock)) {
