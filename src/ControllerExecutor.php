@@ -206,7 +206,7 @@ class ControllerExecutor implements ControllerExecutorInterface
             /** @var App $app */
             $app = get_static_container(App::class);
 
-            return $app::getSubdomain();
+            return $app::getSubdomain() ?: get_required_env(ConfigConstants::DEFAULT_DB);
         }
 
         return $dbName;
