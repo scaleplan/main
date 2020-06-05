@@ -181,7 +181,7 @@ class App
             : date_default_timezone_get();
         static::$timeZone = new \DateTimeZone($timeZoneName);
 
-        static::$locale = \Locale::acceptFromHttp((string)($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? ''))
+        static::$locale = \Locale::acceptFromHttp(($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? ''))
             ?: get_required_env('DEFAULT_LANG');
         setlocale(LC_ALL, static::$locale);
 

@@ -248,11 +248,6 @@ class View implements ViewInterface
      * @return PhpQueryObject
      *
      * @throws \PhpQuery\Exceptions\PhpQueryException
-     * @throws \ReflectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
-     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Result\Exceptions\ResultException
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
