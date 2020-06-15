@@ -272,7 +272,7 @@ class ControllerExecutor implements ControllerExecutorInterface
             return $method->invokeArgs($object, $args);
         } catch (\ReflectionException $e) {
             if (strpos($e->getMessage(), 'Trying to invoke private method') !== false) {
-                throw new ControllerException('Метод не доступен');
+                throw new ControllerException('Метод не доступен.');
             }
 
             throw $e;

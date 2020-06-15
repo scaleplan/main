@@ -110,35 +110,35 @@ class App
         }
 
         if (empty($cacheType) || !\in_array($cacheType, ['redis', 'memcached'], true)) {
-            throw new CacheException('Для подключения к кэшу не хватает параметра cacheType, либо он задан неверно');
+            throw new CacheException('Для подключения к кэшу не хватает параметра cacheType, либо он задан неверно.');
         }
 
         if ($cacheType === 'memcached' && !extension_loaded('memcached')) {
-            throw new CacheException('Расширение memcached не загруженно');
+            throw new CacheException('Расширение memcached не загруженно.');
         }
 
         if ($cacheType === 'redis' && !extension_loaded('redis')) {
-            throw new CacheException('Расширение redis не загруженно');
+            throw new CacheException('Расширение Redis не загруженно.');
         }
 
         if ($cacheType === 'memcached' && !$port) {
             throw new CacheException(
-                'Для Memcached недоступно подключение к Unix-сокету. Необходимо задать порт подключения'
+                'Для Memcached недоступно подключение к Unix-сокету. Необходимо задать порт подключения.'
             );
         }
 
         if (empty($connectType) || !\in_array($connectType, ['connect', 'pconnect'], true)) {
-            throw new CacheException('Для подключения к кэшу не хватает параметра cacheType, либо он задан неверно');
+            throw new CacheException('Для подключения к кэшу не хватает параметра cacheType, либо он задан неверно.');
         }
 
         if (empty($hostOrSocket)) {
-            throw new CacheException('Для подключения к кэшу не хватает параметра hostOrSocket, либо он задан неверно');
+            throw new CacheException('Для подключения к кэшу не хватает параметра hostOrSocket, либо он задан неверно.');
         }
 
         if ($cacheType === 'memcached') {
             $memcached = $connectType === 'pconnect' ? new \Memcached(static::CACHE_PERSISTENT_ID) : new \Memcached();
             if (!$memcached->addServer($hostOrSocket, $port)) {
-                throw new CacheException('Не удалось подключиться к Memcached');
+                throw new CacheException('Не удалось подключиться к Memcached.');
             }
 
             return static::$caches[$hostOrSocket] = $memcached;
@@ -146,7 +146,7 @@ class App
 
         $redis = new \Redis();
         if (!$redis->$connectType($hostOrSocket, $port)) {
-            throw new CacheException('Не удалось подключиться к Redis');
+            throw new CacheException('Не удалось подключиться к Redis.');
         }
 
         return static::$caches[$hostOrSocket] = $redis;
@@ -167,7 +167,7 @@ class App
     {
         if (isset($_SERVER['HTTP_HOST'])) {
             if (!Helper::hostCheck($_SERVER['HTTP_HOST'])) {
-                throw new InvalidHostException('Передан неверный заголовок HTTP-HOST');
+                throw new InvalidHostException('Передан неверный заголовок HTTP-HOST.');
             }
 
             static::$host = $_SERVER['HTTP_HOST'];
@@ -278,7 +278,7 @@ class App
                     . "/$name.yml";
 
                 if (!file_exists($filePath)) {
-                    throw new AppException("Файл подключения к базе данных '$name' не найден");
+                    throw new AppException("Файл подключения к базе данных '$name' не найден.");
                 }
 
                 $_SESSION['databases'][$name] = Yaml::parse(file_get_contents($filePath));
@@ -290,15 +290,15 @@ class App
         }
 
         if (empty($db['DNS'])) {
-            throw new DatabaseException("В данных о подключении к БД '$name' не хватает строки подключения");
+            throw new DatabaseException("В данных о подключении к БД '$name' не хватает строки подключения.");
         }
 
         if (empty($db['USER'])) {
-            throw new DatabaseException("В данных о подключении к БД '$name' не хватает имени пользователя БД");
+            throw new DatabaseException("В данных о подключении к БД '$name' не хватает имени пользователя БД.");
         }
 
         if (empty($db['PASSWORD'])) {
-            throw new DatabaseException("В данных о подключении к БД '$name' не хватает пароля пользователя БД");
+            throw new DatabaseException("В данных о подключении к БД '$name' не хватает пароля пользователя БД.");
         }
 
         return $db;
@@ -353,7 +353,7 @@ class App
         }
 
         if (\in_array($name, static::$denyDatabases, true)) {
-            throw new DatabaseException("Подключение к базе данных '$name' не разрешено");
+            throw new DatabaseException("Подключение к базе данных '$name' не разрешено.");
         }
 
         if (!empty(static::$databases[$name]) && !$isNewConnection) {

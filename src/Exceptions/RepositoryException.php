@@ -9,5 +9,5 @@ namespace Scaleplan\Main\Exceptions;
  */
 class RepositoryException extends AbstractException
 {
-    public const MESSAGE = 'Repository error.';
+    public const MESSAGE = 'Ошибка репозитория.';
 }

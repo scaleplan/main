@@ -9,5 +9,5 @@ namespace Scaleplan\Main\Exceptions;
  */
 class CacheException extends AbstractException
 {
-    public const MESSAGE = 'Cache error.';
+    public const MESSAGE = 'Ошибка кэширования.';
 }

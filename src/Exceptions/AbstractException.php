@@ -10,7 +10,7 @@ namespace Scaleplan\Main\Exceptions;
  */
 abstract class AbstractException extends \Exception
 {
-    public const MESSAGE = 'Application error.';
+    public const MESSAGE = 'Ошибка приложения.';
     public const CODE = 500;
 
     /**

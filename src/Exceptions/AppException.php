@@ -10,5 +10,4 @@ namespace Scaleplan\Main\Exceptions;
  */
 class AppException extends AbstractException
 {
-    public const MESSAGE = 'Application error.';
 }
