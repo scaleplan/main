@@ -20,6 +20,7 @@ use Symfony\Component\Yaml\Yaml;
 use function Scaleplan\DependencyInjection\get_required_container;
 use function Scaleplan\Helpers\get_env;
 use function Scaleplan\Helpers\get_required_env;
+use function Scaleplan\Translator\translate;
 
 /**
  * Class App
@@ -89,8 +90,14 @@ class App
      * @param string $hostOrSocket - хост или сокет подключения
      * @param int $port - порт поключения
      *
-     * @return \Memcached|\Redis
+     * @return \Memcached|mixed|\Redis
+     *
      * @throws CacheException
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
     public static function getCache(
@@ -110,35 +117,33 @@ class App
         }
 
         if (empty($cacheType) || !\in_array($cacheType, ['redis', 'memcached'], true)) {
-            throw new CacheException('Для подключения к кэшу не хватает параметра cacheType, либо он задан неверно.');
+            throw new CacheException(translate('main.cache-type-not-found'));
         }
 
         if ($cacheType === 'memcached' && !extension_loaded('memcached')) {
-            throw new CacheException('Расширение memcached не загруженно.');
+            throw new CacheException(translate('main.memcached-not-load'));
         }
 
         if ($cacheType === 'redis' && !extension_loaded('redis')) {
-            throw new CacheException('Расширение Redis не загруженно.');
+            throw new CacheException(translate('main.redis-not-load'));
         }
 
         if ($cacheType === 'memcached' && !$port) {
-            throw new CacheException(
-                'Для Memcached недоступно подключение к Unix-сокету. Необходимо задать порт подключения.'
-            );
+            throw new CacheException(translate('main.memcached-port-not-found'));
         }
 
         if (empty($connectType) || !\in_array($connectType, ['connect', 'pconnect'], true)) {
-            throw new CacheException('Для подключения к кэшу не хватает параметра cacheType, либо он задан неверно.');
+            throw new CacheException(translate('main.cache-type-not-found'));
         }
 
         if (empty($hostOrSocket)) {
-            throw new CacheException('Для подключения к кэшу не хватает параметра hostOrSocket, либо он задан неверно.');
+            throw new CacheException(translate('main.host-not-found'));
         }
 
         if ($cacheType === 'memcached') {
             $memcached = $connectType === 'pconnect' ? new \Memcached(static::CACHE_PERSISTENT_ID) : new \Memcached();
             if (!$memcached->addServer($hostOrSocket, $port)) {
-                throw new CacheException('Не удалось подключиться к Memcached.');
+                throw new CacheException(translate('main.memcached-connect-failed'));
             }
 
             return static::$caches[$hostOrSocket] = $memcached;
@@ -146,7 +151,7 @@ class App
 
         $redis = new \Redis();
         if (!$redis->$connectType($hostOrSocket, $port)) {
-            throw new CacheException('Не удалось подключиться к Redis.');
+            throw new CacheException(translate('main.redis-connect-failed'));
         }
 
         return static::$caches[$hostOrSocket] = $redis;
@@ -167,7 +172,7 @@ class App
     {
         if (isset($_SERVER['HTTP_HOST'])) {
             if (!Helper::hostCheck($_SERVER['HTTP_HOST'])) {
-                throw new InvalidHostException('Передан неверный заголовок HTTP-HOST.');
+                throw new InvalidHostException(translate('main.wrong-http-host'));
             }
 
             static::$host = $_SERVER['HTTP_HOST'];
@@ -267,6 +272,11 @@ class App
      *
      * @throws AppException
      * @throws DatabaseException
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      */
     protected static function getDatabaseConnectionInfo(string $name) : array
@@ -278,7 +288,7 @@ class App
                     . "/$name.yml";
 
                 if (!file_exists($filePath)) {
-                    throw new AppException("Файл подключения к базе данных '$name' не найден.");
+                    throw new AppException(translate('main.db-connect-file-not-found', ['name' => $name,]));
                 }
 
                 $_SESSION['databases'][$name] = Yaml::parse(file_get_contents($filePath));
@@ -290,15 +300,15 @@ class App
         }
 
         if (empty($db['DNS'])) {
-            throw new DatabaseException("В данных о подключении к БД '$name' не хватает строки подключения.");
+            throw new DatabaseException(translate('main.db-connection-string-not-found', ['name' => $name,]));
         }
 
         if (empty($db['USER'])) {
-            throw new DatabaseException("В данных о подключении к БД '$name' не хватает имени пользователя БД.");
+            throw new DatabaseException(translate('main.db-user-not-found', ['name' => $name,]));
         }
 
         if (empty($db['PASSWORD'])) {
-            throw new DatabaseException("В данных о подключении к БД '$name' не хватает пароля пользователя БД.");
+            throw new DatabaseException(translate('main.db-password-not-found', ['name' => $name,]));
         }
 
         return $db;
@@ -353,7 +363,7 @@ class App
         }
 
         if (\in_array($name, static::$denyDatabases, true)) {
-            throw new DatabaseException("Подключение к базе данных '$name' не разрешено.");
+            throw new DatabaseException(translate('main.db-connect-deny', ['name' => $name,]));
         }
 
         if (!empty(static::$databases[$name]) && !$isNewConnection) {

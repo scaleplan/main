@@ -9,6 +9,6 @@ namespace Scaleplan\Main\Exceptions;
  */
 class InvalidHostException extends AbstractException
 {
-    public const MESSAGE = 'Неверный хост.';
+    public const MESSAGE = 'main.wrong-host';
     public const CODE = 400;
 }

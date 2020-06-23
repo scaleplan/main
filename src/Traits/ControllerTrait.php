@@ -18,6 +18,7 @@ use Scaleplan\Result\Interfaces\ResultInterface;
 use Symfony\Component\Yaml\Yaml;
 use function Scaleplan\DependencyInjection\get_required_container;
 use function Scaleplan\Helpers\get_required_env;
+use function Scaleplan\Translator\translate;
 
 /**
  * Trait ControllerTrait
@@ -117,12 +118,12 @@ trait ControllerTrait
         /** @var AbstractController $this */
         $repo = $this->getRepository();
         if (!$repo) {
-            throw new ControllerException('Репозиторий не найден.');
+            throw new ControllerException(translate('main.repo-not-found'));
         }
         $model = $model ?? $repo->getFullInfo($idDto);
         if (!$model->getResult()) {
             throw new NotFoundException(
-                'Объект с таким идентификатором не существует.',
+                translate('main.object-with-id-not-found'),
                 HttpStatusCodes::HTTP_NOT_FOUND
             );
         }
@@ -141,11 +142,16 @@ trait ControllerTrait
     /**
      * Сохранить новую модель
      *
-     * @param DTO|array $data
+     * @param $data
      *
      * @return DbResultInterface
      *
      * @throws ControllerException
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
     public function actionPut($data) : DbResultInterface
     {
@@ -156,12 +162,12 @@ trait ControllerTrait
             /** @var DbResultInterface $result */
             $result = $repo->put($data);
             if (!$result->getResult()) {
-                throw new ControllerException('Не удалось создать объект.');
+                throw new ControllerException(translate('main.object-creating-failed'));
             }
         } catch (\PDOException $e) {
             if (in_array($e->getCode(), PgDb::DUPLICATE_ERROR_CODES, false)) {
                 throw new ControllerException(
-                    'Такая сущность уже есть в системе.',
+                    translate('main.object-already-exist'),
                     null,
                     HttpStatusCodes::HTTP_CONFLICT
                 );
@@ -182,24 +188,29 @@ trait ControllerTrait
      * @return DbResultInterface
      *
      * @throws ControllerException
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
     public function actionUpdate(DTO $id, DTO $dto) : DbResultInterface
     {
         /** @var AbstractController $this */
         $repo = $this->getRepository();
         if (!$repo) {
-            throw new ControllerException('Репозиторий не найден.');
+            throw new ControllerException(translate('main.repo-not-found'));
         }
 
         if (!$dto->toSnakeArray()) {
-            throw new ControllerException('Нет данных для обновления.');
+            throw new ControllerException(translate('main.no-data-to-update'));
         }
 
         /** @var DbResultInterface $result */
         $result = $repo->update($id->toSnakeArray() + $dto->toSnakeArray());
         if (!$result->getResult()) {
             throw new ControllerException(
-                'Не удалось изменить объект. Возможно, объект не существует.',
+                translate('main.object-update-failed'),
                 null,
                 HttpStatusCodes::HTTP_NOT_FOUND
             );
@@ -216,19 +227,24 @@ trait ControllerTrait
      * @return DbResultInterface
      *
      * @throws ControllerException
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
     public function actionDelete(DTO $id) : DbResultInterface
     {
         /** @var AbstractController $this */
         $repo = $this->getRepository();
         if (!$repo) {
-            throw new ControllerException('Репозиторий не найден.');
+            throw new ControllerException(translate('main.repo-not-found'));
         }
 
         /** @var DbResultInterface $result */
         $result = $repo->delete($id);
         if (!$result->getResult()) {
-            throw new ControllerException('Не удалось удалить объект.', null, HttpStatusCodes::HTTP_NOT_FOUND);
+            throw new ControllerException(translate('main.object-delete-failed'), null, HttpStatusCodes::HTTP_NOT_FOUND);
         }
 
         return $result;
@@ -255,14 +271,14 @@ trait ControllerTrait
         /** @var AbstractController $this */
         $repo = $this->getRepository();
         if (!$repo) {
-            throw new ControllerException('Репозиторий не найден.');
+            throw new ControllerException(translate('main.repo-not-found'));
         }
 
         /** @var DbResultInterface $result */
         $result = $repo->getInfo($dto);
         if (!$result->getResult()) {
             throw new ControllerException(
-                'Объект по таким условиям не существует.',
+                translate('main.object-not-found'),
                 null,
                 HttpStatusCodes::HTTP_NOT_FOUND
             );
@@ -295,14 +311,14 @@ trait ControllerTrait
         /** @var AbstractController $this */
         $repo = $this->getRepository();
         if (!$repo) {
-            throw new ControllerException('Репозиторий не найден.');
+            throw new ControllerException(translate('main.repo-not-found'));
         }
 
         /** @var DbResultInterface $result */
         $result = $repo->getFullInfo($id);
         if (!$result->getResult()) {
             throw new NotFoundException(
-                'Объект с таким идентификатором не существует.',
+                translate('main.object-with-id-not-found'),
                 HttpStatusCodes::HTTP_NOT_FOUND
             );
         }
@@ -313,18 +329,23 @@ trait ControllerTrait
     /**
      * Список объектов
      *
-     * @param DTO|array $data
+     * @param $data
      *
      * @return ResultInterface
      *
      * @throws ControllerException
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
     public function actionList($data) : ResultInterface
     {
         /** @var AbstractController $this */
         $repo = $this->getRepository();
         if (!$repo) {
-            throw new ControllerException('Репозиторий не найден.');
+            throw new ControllerException(translate('main.repo-not-found'));
         }
 
         if ($data instanceof DTO) {

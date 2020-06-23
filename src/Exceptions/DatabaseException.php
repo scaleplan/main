@@ -9,5 +9,5 @@ namespace Scaleplan\Main\Exceptions;
  */
 class DatabaseException extends AbstractException
 {
-    public const MESSAGE = 'Ошибка базы данных.';
+    public const MESSAGE = 'main.db-error';
 }

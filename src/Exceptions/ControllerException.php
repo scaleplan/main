@@ -9,6 +9,6 @@ namespace Scaleplan\Main\Exceptions;
  */
 class ControllerException extends AbstractException
 {
-    public const MESSAGE = 'Ошибка контроллера.';
+    public const MESSAGE = 'main.controller-error';
     public const CODE = 400;
 }

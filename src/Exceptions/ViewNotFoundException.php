@@ -9,6 +9,6 @@ namespace Scaleplan\Main\Exceptions;
  */
 class ViewNotFoundException extends AbstractException
 {
-    public const MESSAGE = 'Файл представления ":subject" не найден.';
+    public const MESSAGE = 'main.view-file-not-found';
     public const CODE = 404;
 }

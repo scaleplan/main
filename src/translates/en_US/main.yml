@@ -1,0 +1,33 @@
+repo-not-found: Repository not found.
+service-not-found: Service not found.
+cache-type-not-found: Parameter 'cacheType' for cache connection not found or this parameter is wrong.
+memcached-not-load: Extension Memcached not loaded.
+redis-not-load: Extension Redis not loaded.
+memcached-port-not-found: Connection to Memcached via Unix-socket not available. Connection port expected.
+host-not-found: Parameter 'hostOrSocket' for cache connection not found or this parameter is wrong.
+memcached-connect-failed: Memcached connection failed.
+redis-connect-failed: Redis connection failed.
+wrong-http-host: Wrong HTTP-HOST header.
+db-connect-file-not-found: Database ':name' connection file not found.
+db-connection-string-not-found: Database ':name' connection string not found.
+db-user-not-found: Database ':name' connection user not found.
+db-password-not-found: Database ':name' connection password not found.
+db-connect-deny: Connecting to database ':name' not allowed.
+method-not-available: Method not available.
+object-with-id-not-found: Object with current ID not found.
+object-creating-failed: Object creating error.
+object-already-exist: Object already exist.
+no-data-to-update: No data to update.
+object-update-failed: Object update failed. Maybe, object not exist.
+object-delete-failed: Object delete failed.
+object-not-found: Object not found by this conditions.
+app-error: Application error.
+cache-error: Cache error.
+controller-error: Controller error.
+db-error: Database error.
+wrong-host: Wrong host.
+repo-error: Repository error.
+array-required: Method :subject requires arguments in associative array format or in DTO object.
+repo-or-method-not-found: Repository or repository method not found.
+setting-not-found: Setting not found.
+view-file-not-found: View file ":subject" not found.

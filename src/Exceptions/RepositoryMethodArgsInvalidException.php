@@ -9,6 +9,6 @@ namespace Scaleplan\Main\Exceptions;
  */
 class RepositoryMethodArgsInvalidException extends RepositoryException
 {
-    public const MESSAGE = 'Метод :subject требует аргументы в виде ассоциативного массива или объекта DTO.';
+    public const MESSAGE = 'main.array-required';
     public const CODE = 406;
 }

@@ -23,6 +23,7 @@ use function Scaleplan\DependencyInjection\get_required_container;
 use function Scaleplan\DependencyInjection\get_static_container;
 use function Scaleplan\Helpers\get_env;
 use function Scaleplan\Helpers\get_required_env;
+use function Scaleplan\Translator\translate;
 
 /**
  * Class ControllerExecutor
@@ -253,8 +254,12 @@ class ControllerExecutor implements ControllerExecutorInterface
      *
      * @return mixed
      *
-     * @throws \ReflectionException
      * @throws ControllerException
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
     protected static function executeControllerMethod(
         \ReflectionClass $refClass,
@@ -272,7 +277,7 @@ class ControllerExecutor implements ControllerExecutorInterface
             return $method->invokeArgs($object, $args);
         } catch (\ReflectionException $e) {
             if (strpos($e->getMessage(), 'Trying to invoke private method') !== false) {
-                throw new ControllerException('Метод не доступен.');
+                throw new ControllerException(translate('main.method-not-available'));
             }
 
             throw $e;

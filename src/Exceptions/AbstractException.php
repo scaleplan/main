@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Scaleplan\Main\Exceptions;
 
+use function Scaleplan\Translator\translate;
+
 /**
  * Class AbstractException
  *
@@ -10,16 +12,22 @@ namespace Scaleplan\Main\Exceptions;
  */
 abstract class AbstractException extends \Exception
 {
-    public const MESSAGE = 'Ошибка приложения.';
+    public const MESSAGE = 'main.app-error';
     public const CODE = 500;
 
     /**
      * AbstractException constructor.
      *
-     * @param string $message
+     * @param string|null $message
      * @param string|null $subject
      * @param int $code
      * @param \Throwable|null $previous
+     *
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
     public function __construct(
         string $message = null,
@@ -29,7 +37,7 @@ abstract class AbstractException extends \Exception
     )
     {
         parent::__construct(
-            str_replace(':subject', $subject, $message ?: static::MESSAGE) ?: static::MESSAGE,
+            $message ?: translate(static::MESSAGE, ['subject' => $subject,]) ?: static::MESSAGE,
             $code ?: static::CODE,
             $previous
         );

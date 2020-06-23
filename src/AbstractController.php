@@ -14,6 +14,7 @@ use Scaleplan\Result\Interfaces\DbResultInterface;
 use Scaleplan\Result\Interfaces\ResultInterface;
 use function Scaleplan\DependencyInjection\get_required_container;
 use function Scaleplan\Helpers\get_required_env;
+use function Scaleplan\Translator\translate;
 
 /**
  * Class Controller
@@ -116,11 +117,16 @@ abstract class AbstractController
      * @return AbstractRepository
      *
      * @throws ControllerException
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
     public function getRepository() : AbstractRepository
     {
         if (!class_exists($this->repositoryName)) {
-            throw new ControllerException('Репозиторий не найден.');
+            throw new ControllerException(translate('main.repo-not-found'));
         }
 
         return new $this->repositoryName;
@@ -132,11 +138,16 @@ abstract class AbstractController
      * @return AbstractService
      *
      * @throws ControllerException
+     * @throws \ReflectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ContainerTypeNotSupportingException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\DependencyInjectionException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
+     * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      */
     public function getService() : AbstractService
     {
         if (!class_exists($this->serviceName)) {
-            throw new ControllerException('Сервис не найден.');
+            throw new ControllerException(translate('main.service-not-found'));
         }
 
         return new $this->serviceName;

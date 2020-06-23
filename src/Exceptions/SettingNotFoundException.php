@@ -9,6 +9,6 @@ namespace Scaleplan\Main\Exceptions;
  */
 class SettingNotFoundException extends AbstractException
 {
-    public const MESSAGE = 'Настройка не найдена.';
+    public const MESSAGE = 'main.setting-not-found';
     public const CODE = 404;
 }
