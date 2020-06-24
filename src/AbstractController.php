@@ -168,7 +168,7 @@ abstract class AbstractController
      * @throws \Scaleplan\DependencyInjection\Exceptions\ParameterMustBeInterfaceNameOrClassNameException
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
-     * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
+     * @throws \Scaleplan\Templater\Exceptions\DomElementNotFoundException
      */
     protected function formatResponse(DbResultInterface $result, string $parentSelector = 'body') : ResultInterface
     {

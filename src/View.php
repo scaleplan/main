@@ -215,7 +215,7 @@ class View implements ViewInterface
      *
      * @throws \PhpQuery\Exceptions\PhpQueryException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
-     * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
+     * @throws \Scaleplan\Templater\Exceptions\DomElementNotFoundException
      * @throws \Exception
      */
     public function render() : PhpQueryObject
@@ -250,7 +250,7 @@ class View implements ViewInterface
      * @throws \PhpQuery\Exceptions\PhpQueryException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Result\Exceptions\ResultException
-     * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
+     * @throws \Scaleplan\Templater\Exceptions\DomElementNotFoundException
      */
     public static function renderError(\Throwable $e) : PhpQueryObject
     {
@@ -269,7 +269,7 @@ class View implements ViewInterface
      *
      * @throws \PhpQuery\Exceptions\PhpQueryException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
-     * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
+     * @throws \Scaleplan\Templater\Exceptions\DomElementNotFoundException
      */
     public function __toString()
     {

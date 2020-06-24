@@ -13,7 +13,7 @@ use function Scaleplan\Translator\translate;
 abstract class AbstractException extends \Exception
 {
     public const MESSAGE = 'main.app-error';
-    public const CODE = 500;
+    public const CODE    = 500;
 
     /**
      * AbstractException constructor.
@@ -37,7 +37,10 @@ abstract class AbstractException extends \Exception
     )
     {
         parent::__construct(
-            $message ?: translate(static::MESSAGE, ['subject' => $subject,]) ?: static::MESSAGE,
+            translate($message ?? '', ['subject' => $subject,])
+                ?: $message
+                ?: translate(static::MESSAGE, ['subject' => $subject,])
+                ?: static::MESSAGE,
             $code ?: static::CODE,
             $previous
         );

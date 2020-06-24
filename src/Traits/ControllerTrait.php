@@ -264,7 +264,7 @@ trait ControllerTrait
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Main\Exceptions\ViewNotFoundException
-     * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
+     * @throws \Scaleplan\Templater\Exceptions\DomElementNotFoundException
      */
     public function actionInfo(DTO $dto) : ResultInterface
     {
@@ -304,7 +304,7 @@ trait ControllerTrait
      * @throws \Scaleplan\DependencyInjection\Exceptions\ReturnTypeMustImplementsInterfaceException
      * @throws \Scaleplan\Helpers\Exceptions\EnvNotFoundException
      * @throws \Scaleplan\Main\Exceptions\ViewNotFoundException
-     * @throws \Scaleplan\Templater\Exceptions\DomElementNotFountException
+     * @throws \Scaleplan\Templater\Exceptions\DomElementNotFoundException
      */
     public function actionFullInfo(DTO $id) : ResultInterface
     {

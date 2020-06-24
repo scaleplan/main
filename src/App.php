@@ -61,7 +61,7 @@ class App
     /**
      * @var string
      */
-    protected static $locale;
+    protected static $locale = 'en_US';
 
     /**
      * @var string
