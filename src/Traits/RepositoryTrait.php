@@ -40,7 +40,7 @@ trait RepositoryTrait
      * @dbName $current
      */
     public $getList =
-        '[(SELECT id, name
+        "[(SELECT id, name
            FROM :table
            WHERE id = :id)
            UNION]
@@ -48,8 +48,9 @@ trait RepositoryTrait
            FROM :table
            WHERE 1 = 1
             [AND id != :id]
+            [AND name ILIKE '%' || :search || '%']
           [LIMIT :limit]
-          [OFFSET :offset])';
+          [OFFSET :offset])";
 
     /**
      * @dbName $current
