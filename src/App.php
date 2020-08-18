@@ -16,6 +16,7 @@ use Scaleplan\Main\Exceptions\InvalidHostException;
 use Scaleplan\Main\Exceptions\ViewNotFoundException;
 use Scaleplan\Main\Interfaces\UserInterface;
 use Scaleplan\NginxGeo\NginxGeoInterface;
+use Scaleplan\Translator\Translator;
 use Symfony\Component\Yaml\Yaml;
 use function Scaleplan\DependencyInjection\get_required_container;
 use function Scaleplan\Helpers\get_env;
@@ -186,8 +187,10 @@ class App
             : date_default_timezone_get();
         static::$timeZone = new \DateTimeZone($timeZoneName);
 
-        static::$locale = \Locale::acceptFromHttp(($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? ''))
-            ?: get_required_env('DEFAULT_LANG');
+        static::$locale = Translator::getRealLocale(
+            \Locale::acceptFromHttp(($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '')),
+            get_required_env('BUNDLE_PATH') . get_required_env('TRANSLATES_PATH')
+        ) ?: get_required_env('DEFAULT_LANG');
         setlocale(LC_ALL, static::$locale);
 
         date_default_timezone_set(static::$timeZone->getName());
