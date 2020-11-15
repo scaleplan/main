@@ -5,6 +5,7 @@ namespace Scaleplan\Main;
 use phpDocumentor\Reflection\DocBlock;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Scaleplan\Http\Constants\ContentTypes;
 use Scaleplan\Http\CurrentRequest;
@@ -40,19 +41,24 @@ class RequestHandler implements RequestHandlerInterface
     protected $checkAccess = true;
 
     /**
+     * @var MiddlewareInterface[]
+     */
+    protected $middlewares;
+
+    /**
      * RequestHandler constructor.
      */
     public function __construct()
     {
         if (null !== get_env('CACHE_ENABLE')) {
-            $this->cacheEnable = (bool)get_env('CACHE_ENABLE');
+            $this->cacheEnable = (bool) get_env('CACHE_ENABLE');
         }
     }
 
     /**
      * @return bool
      */
-    public function isCacheEnable() : bool
+    public function isCacheEnable(): bool
     {
         return $this->cacheEnable;
     }
@@ -60,7 +66,7 @@ class RequestHandler implements RequestHandlerInterface
     /**
      * @param bool $cacheEnable
      */
-    public function setCacheEnable(bool $cacheEnable) : void
+    public function setCacheEnable(bool $cacheEnable): void
     {
         $this->cacheEnable = $cacheEnable;
     }
@@ -68,7 +74,7 @@ class RequestHandler implements RequestHandlerInterface
     /**
      * @return bool
      */
-    public function isCheckAccess() : bool
+    public function isCheckAccess(): bool
     {
         return $this->checkAccess;
     }
@@ -76,7 +82,7 @@ class RequestHandler implements RequestHandlerInterface
     /**
      * @param bool $checkAccess
      */
-    public function setCheckAccess(bool $checkAccess) : void
+    public function setCheckAccess(bool $checkAccess): void
     {
         $this->checkAccess = $checkAccess;
     }
@@ -86,7 +92,7 @@ class RequestHandler implements RequestHandlerInterface
      *
      * @return DocBlock
      */
-    public static function getMethodDocBlock(\ReflectionMethod $refMethod) : DocBlock
+    public static function getMethodDocBlock(\ReflectionMethod $refMethod): DocBlock
     {
         static $docBlock;
         if (!$docBlock) {
@@ -136,6 +142,14 @@ class RequestHandler implements RequestHandlerInterface
     }
 
     /**
+     * @param MiddlewareInterface $middleware
+     */
+    public function addMiddleware(MiddlewareInterface $middleware): void
+    {
+        $this->middlewares[] = $middleware;
+    }
+
+    /**
      * @param ServerRequestInterface $request
      *
      * @return ResponseInterface
@@ -161,7 +175,7 @@ class RequestHandler implements RequestHandlerInterface
      * @throws \Scaleplan\Result\Exceptions\ResultException
      * @throws \Scaleplan\Templater\Exceptions\DomElementNotFoundException
      */
-    public function handle(ServerRequestInterface $request) : ResponseInterface
+    public function handle(ServerRequestInterface $request): ResponseInterface
     {
         try {
             /** @var Router $router */
@@ -186,6 +200,10 @@ class RequestHandler implements RequestHandlerInterface
                     $response->send();
                     return $response;
                 }
+            }
+
+            foreach ($this->middlewares ?? [] as $middleware) {
+                $middleware->process($request, $this);
             }
 
             $result = static::executeControllerMethod(
