@@ -7,6 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Scaleplan\Access\Exceptions\AuthException;
 use Scaleplan\Http\Constants\ContentTypes;
 use Scaleplan\Http\CurrentRequest;
 use Scaleplan\Http\CurrentResponse;
@@ -158,7 +159,6 @@ class RequestHandler implements RequestHandlerInterface
      * @throws \ReflectionException
      * @throws \Scaleplan\Access\Exceptions\AccessDeniedException
      * @throws \Scaleplan\Access\Exceptions\AccessException
-     * @throws \Scaleplan\Access\Exceptions\AuthException
      * @throws \Scaleplan\Access\Exceptions\ClassNotFoundException
      * @throws \Scaleplan\Access\Exceptions\FormatException
      * @throws \Scaleplan\Access\Exceptions\MethodNotFoundException
