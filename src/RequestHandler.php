@@ -219,7 +219,8 @@ class RequestHandler implements RequestHandlerInterface
             $response->send();
 
             if ($this->cacheEnable) {
-                $responseCache->getCache()->setHtml($result, $responseCache->getCacheUserId());
+                $responseCache->getCache()
+                    && $responseCache->getCache()->setHtml($result, $responseCache->getCacheUserId());
             }
         } catch (AuthException $e) {
             if ($request->getAccept() === ContentTypes::JSON) {

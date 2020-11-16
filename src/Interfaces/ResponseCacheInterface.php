@@ -12,14 +12,14 @@ use Scaleplan\Data\Interfaces\CacheInterface;
 interface ResponseCacheInterface
 {
     /**
-     * @return CacheInterface
+     * @return CacheInterface|null
      */
-    public function getCache() : CacheInterface;
+    public function getCache() : ?CacheInterface;
 
     /**
-     * @param CacheInterface $cache
+     * @param CacheInterface|null $cache
      */
-    public function setCache(CacheInterface $cache) : void;
+    public function setCache(?CacheInterface $cache) : void;
 
     /**
      * @return string

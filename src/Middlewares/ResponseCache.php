@@ -2,7 +2,6 @@
 
 namespace Scaleplan\Main\Middlewares;
 
-use App\Constants\ConfigConstants;
 use phpDocumentor\Reflection\DocBlock;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -12,6 +11,7 @@ use Scaleplan\Data\Interfaces\CacheInterface;
 use Scaleplan\Http\Constants\ContentTypes;
 use Scaleplan\Http\CurrentRequest;
 use Scaleplan\Main\App;
+use Scaleplan\Main\Constants\ConfigConstants;
 use Scaleplan\Main\Exceptions\ViewNotFoundException;
 use Scaleplan\Main\Interfaces\ResponseCacheInterface;
 use Scaleplan\Main\Interfaces\UserInterface;
@@ -72,17 +72,17 @@ class ResponseCache implements MiddlewareInterface, ResponseCacheInterface
     }
 
     /**
-     * @return CacheInterface
+     * @return CacheInterface|null
      */
-    public function getCache() : CacheInterface
+    public function getCache() : ?CacheInterface
     {
         return $this->cache;
     }
 
     /**
-     * @param CacheInterface $cache
+     * @param CacheInterface|null $cache
      */
-    public function setCache(CacheInterface $cache) : void
+    public function setCache(?CacheInterface $cache) : void
     {
         $this->cache = $cache;
     }
